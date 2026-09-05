@@ -1,0 +1,69 @@
+<?xml version="1.0" ?>
+<mxfile host="app.diagrams.net" version="24.0.0">
+  <diagram name="Page-1" id="page1">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="boundary2" value="Railway Reservation System - Administration" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#4472C4;verticalAlign=top;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="260" y="20" width="560" height="640" as="geometry"/>
+        </mxCell>
+        <mxCell id="actor2" value="Admin /
+Booking Clerk" style="shape=umlActor;whiteSpace=wrap;html=1;outlineConnect=0;fillColor=#FFE699;strokeColor=#D6B656;" vertex="1" parent="1">
+          <mxGeometry x="40" y="300" width="60" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc_schedule" value="Add / Update
+Train Schedule" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E2D6F3;strokeColor=#8064A2;" vertex="1" parent="1">
+          <mxGeometry x="320" y="40" width="200" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc_inventory" value="Manage Seat
+Inventory" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E2D6F3;strokeColor=#8064A2;" vertex="1" parent="1">
+          <mxGeometry x="320" y="130" width="200" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc_fare" value="Manage Fare /
+Quota Rules" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E2D6F3;strokeColor=#8064A2;" vertex="1" parent="1">
+          <mxGeometry x="320" y="220" width="200" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc_report" value="Generate MIS /
+Occupancy Reports" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E2D6F3;strokeColor=#8064A2;" vertex="1" parent="1">
+          <mxGeometry x="320" y="310" width="200" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc_refund" value="Process Refunds" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E2D6F3;strokeColor=#8064A2;" vertex="1" parent="1">
+          <mxGeometry x="320" y="400" width="200" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc_users" value="Manage User
+Accounts" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E2D6F3;strokeColor=#8064A2;" vertex="1" parent="1">
+          <mxGeometry x="320" y="490" width="200" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc_audit" value="View System
+Audit Logs" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E2D6F3;strokeColor=#8064A2;" vertex="1" parent="1">
+          <mxGeometry x="320" y="580" width="200" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" value="" style="endArrow=none;html=1;strokeColor=#000000;" edge="1" parent="1" source="actor2" target="uc_schedule">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="" style="endArrow=none;html=1;strokeColor=#000000;" edge="1" parent="1" source="actor2" target="uc_inventory">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" value="" style="endArrow=none;html=1;strokeColor=#000000;" edge="1" parent="1" source="actor2" target="uc_fare">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" value="" style="endArrow=none;html=1;strokeColor=#000000;" edge="1" parent="1" source="actor2" target="uc_report">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e5" value="" style="endArrow=none;html=1;strokeColor=#000000;" edge="1" parent="1" source="actor2" target="uc_refund">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e6" value="" style="endArrow=none;html=1;strokeColor=#000000;" edge="1" parent="1" source="actor2" target="uc_users">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e7" value="" style="endArrow=none;html=1;strokeColor=#000000;" edge="1" parent="1" source="actor2" target="uc_audit">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e8" value="&lt;&lt;extend&gt;&gt;" style="endArrow=open;dashed=1;html=1;strokeColor=#000000;fontSize=10;" edge="1" parent="1" source="uc_refund" target="uc_report">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
