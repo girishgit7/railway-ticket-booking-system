@@ -240,11 +240,11 @@ NFRs below are measurable and tied to test plans. IDs follow `RRS-NF-###`.
 
 ## 7.1 UML Use-Case Diagram — Passenger
 
-*passenger_usecase.io*
+*passenger_usecase.drawio*
 
 ## 7.2 UML Use-Case Diagram — Admin / Booking Clerk
 
-*admin_usecase.io*
+*admin_usecase.drawio*
 
 # 8. Requirements Traceability Matrix (RTM)
 
