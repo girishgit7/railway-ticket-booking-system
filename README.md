@@ -29,7 +29,7 @@
 
 | Role | Name | Signature / Email | Date |
 |---|---|---|---|
-| Course Coordinator | Dr. Pradeep Kumar | Kenny S | 5-09-2026 |
+| Course Coordinator | Dr. Pradeep Kumar Kenny S |  | 5-09-2026 |
 
 ## Table of Contents
 
@@ -240,11 +240,11 @@ NFRs below are measurable and tied to test plans. IDs follow `RRS-NF-###`.
 
 ## 7.1 UML Use-Case Diagram — Passenger
 
-*Diagram placeholder from the source SRS.*
+*passenger_usecase.io*
 
 ## 7.2 UML Use-Case Diagram — Admin / Booking Clerk
 
-*Diagram placeholder from the source SRS.*
+*admin_usecase.io*
 
 # 8. Requirements Traceability Matrix (RTM)
 
