@@ -1,0 +1,8 @@
+*.exe
+*.out
+bookings.txt
+audit.log
+*.tmp
+*.bak
+.vscode/
+.idea/
