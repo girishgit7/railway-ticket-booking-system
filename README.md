@@ -262,5 +262,34 @@ NFRs below are measurable and tied to test plans. IDs follow `RRS-NF-###`.
 | RRS-SR-001 | Password masking/hashing | 5.1.2 / DS-Sec-01 | AuthModule | TC-Sec-01 | N | |
 
 ---
+## Sprint 1 — Build and Run Instructions
+
+### Prerequisites
+- A C++ compiler such as `g++` that supports C++17.
+- A terminal or command prompt.
+
+### Compile the program
+From the repository root, run:
+
+```bash
+g++ -std=c++17 -Wall -Wextra -pedantic railway_ticket_booking_sprint1/railway_sprint1.cpp -o railway_sprint1
+```
+
+### Run the program
+
+On Linux or macOS:
+
+```bash
+./railway_sprint1
+```
+
+On Windows (Command Prompt):
+
+```bash
+railway_sprint1.exe
+```
+
+The program is a console-based railway reservation system. Follow the menu prompts to explore its available features.
+
 
 **Source:** Converted from the uploaded Railway Reservation System SRS PDF, preserving its requirements, terminology, organization, and level of detail. fileciteturn0file0L35-L50
