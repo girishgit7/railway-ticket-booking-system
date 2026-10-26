@@ -1,0 +1,31 @@
+name: Railway C++ Build
+
+on:
+  push:
+    branches:
+      - main
+      - "feature/**"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++
+
+      - name: Compile C++ project
+        run: |
+          g++ -std=c++17 -Wall -Wextra -pedantic railway_ticket_booking_sprint1/railway_sprint1.cpp -o railway_sprint1
+
+      - name: Verify build
+        run: test -x railway_sprint1
