@@ -298,14 +298,14 @@ The program is a console-based railway reservation system. Follow the menu promp
 
 ## 1. Project Overview
 
-Sprint 2 extends the Railway Reservation System developed in C++. It introduces passenger authentication, train administration, ticket booking and cancellation, fare calculation, refund calculation, and reservation tracking.
+Sprint 2 extends the Railway Reservation System with passenger authentication, train administration, ticket booking, cancellation, fare calculation, refund calculation, and booking-status tracking.
 
-The application uses a console-based interface and file-based storage.
+The application is implemented in C++ using a console-based interface and file-based data storage.
 
 ## 2. Technologies Used
 
 - **Programming Language:** C++
-- **C++ Standard:** C++17
+- **Language Standard:** C++17
 - **Compiler:** G++
 - **Data Storage:** Text files
 - **Version Control:** Git and GitHub
@@ -313,78 +313,86 @@ The application uses a console-based interface and file-based storage.
 ## 3. Sprint 2 Features
 
 ### 3.1 Admin Module
-- Admin authentication.
-- Add, update, and remove train records.
+- Admin login authentication.
+- Add new trains.
+- Update existing train details.
+- Remove train records.
 - Configure seat inventory for different travel classes.
 
 ### 3.2 Passenger Authentication
 - Passenger registration and login.
 - Password verification.
-- Account lockout after repeated failed login attempts.
+- Account lockout after three consecutive failed login attempts.
 
 ### 3.3 Train Search and Availability
-- Search for trains using source and destination.
-- View train details and seat availability.
+- Search for trains using source and destination stations.
+- View train details and available seats for different travel classes.
 
 ### 3.4 Ticket Booking
 - Select a train and travel class.
-- Specify the number of seats.
+- Specify the number of seats to book.
 - Select a berth preference where supported.
 - Select a payment method.
-- Calculate ticket fare.
+- Calculate the ticket fare.
 - Generate a PNR for a successful booking.
 
-### 3.5 Cancellation and Refund
+### 3.5 Ticket Cancellation and Refund
 - Cancel a booking using its PNR.
-- Calculate the cancellation fee and refund amount.
+- Calculate the cancellation fee.
+- Calculate the refund amount.
 - Update the booking status.
 
-### 3.6 Reservation Management
+### 3.6 Booking Management
 - View booking history.
-- Check booking status using a PNR.
+- Check booking and cancellation status using a PNR.
 - View seat availability for different travel classes.
+
+### 3.7 Data Management
+- Store application data using text files.
+- Maintain train and reservation records between program executions.
+- Record application activities where supported.
 
 ## 4. Project Files
 
 | File | Description |
 |---|---|
-| `railway_sprint2.cpp` | Sprint 2 C++ source code |
+| `railway_sprint2.cpp` | Main C++ source code for Sprint 2 |
 | `README_Sprint2.md` | Sprint 2 documentation |
 | `build_linux.sh` | Linux build script |
 | `trains.txt` | Sample train data |
 
-## 5. Prerequisites
+## 5. System Requirements
 
 - A C++ compiler supporting C++17.
 - Windows with MinGW/MSYS2 or a Linux environment.
 - A terminal or command prompt.
 
-## 6. Build and Run
+## 6. Compilation and Execution
 
-### Windows — MinGW/MSYS2 UCRT64
+### 6.1 Windows — Using MinGW/MSYS2 UCRT64
 
-Compile the program from the directory containing `railway_sprint2.cpp`:
+Open the terminal in the directory containing `railway_sprint2.cpp` and compile the program:
 
 ```bash
 g++ -std=c++17 -Wall -Wextra -pedantic railway_sprint2.cpp -o railway_sprint2.exe
 ```
 
-Run the executable:
+Run the program:
 
 ```bash
 ./railway_sprint2.exe
 ```
 
-### Linux
+### 6.2 Linux
 
-Run the build script from the project directory:
+From the project directory, run:
 
 ```bash
 chmod +x build_linux.sh
 ./build_linux.sh
 ```
 
-Run the executable produced by the script. Check the script for the exact output filename.
+Run the executable produced by the build script. Check `build_linux.sh` for its exact output filename.
 
 ## 7. Testing
 
@@ -402,24 +410,24 @@ The following features were exercised during testing:
 - Booking history and PNR lookup.
 - Seat availability display.
 
-Further verification is required for overbooking prevention, seat restoration after cancellation, invalid inputs, duplicate train records, and Linux execution.
+Further verification is required for overbooking prevention, seat restoration after cancellation, invalid input handling, duplicate train records, and Linux execution.
 
 ## 8. Limitations
 
 - The application uses a console-based interface.
 - Data is stored using text files.
-- Payment processing is simulated; no real payment gateway is integrated.
-- The application is intended for academic demonstration rather than production railway reservations.
-- Authentication mechanisms are educational and are not intended for production use.
+- Payment methods are simulated; no real payment gateway is integrated.
+- The project is intended for academic demonstration rather than production railway reservations.
+- The authentication mechanisms are educational and are not intended for production use.
 
 ## 9. Future Enhancements
 
-- Integrate a database for persistent data management.
+- Integrate a database for improved data management.
 - Improve password security.
 - Add automated unit and integration tests.
 - Improve input validation and error handling.
-- Develop a graphical or web-based interface.
+- Develop a graphical or web-based user interface.
 
 ## 10. Conclusion
 
-Sprint 2 extends the Railway Reservation System with administrative train management, passenger authentication, reservation processing, cancellation and refund calculations, and booking-status tracking. The project demonstrates C++ programming, file handling, and software testing.
+Sprint 2 extends the Railway Reservation System with train administration, passenger authentication, ticket booking, cancellation and refund calculations, and reservation tracking. The project demonstrates C++ programming, file handling, and software testing.
