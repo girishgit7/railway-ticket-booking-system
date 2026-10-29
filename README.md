@@ -293,3 +293,135 @@ The program is a console-based railway reservation system. Follow the menu promp
 
 
 **Source:** Converted from the uploaded Railway Reservation System SRS PDF, preserving its requirements, terminology, organization, and level of detail. fileciteturn0file0L35-L50
+
+# Railway Ticket Booking System — Sprint 2
+
+## 1. Project Overview
+The Railway Ticket Booking System is a C++ console-based application designed to manage railway reservations. Sprint 2 extends the existing system with administrative train management, passenger authentication, ticket booking, cancellation, and reservation tracking features.
+
+## 2. Technologies Used
+- **Programming Language:** C++
+- **Standard:** C++17
+- **File Handling:** Text files for storing application data
+- **Build Tools:** G++ compiler
+- **Version Control:** Git and GitHub
+
+## 3. Sprint 2 Features
+
+### Admin Module
+- Admin login authentication.
+- Add new trains.
+- Update train details.
+- Remove trains.
+- Configure seat inventory for different travel classes.
+
+### Passenger Module
+- Passenger registration and login.
+- Password verification.
+- Account lockout after repeated failed login attempts.
+
+### Train Search
+- Search for trains using source and destination stations.
+- View available trains and their details.
+
+### Ticket Booking
+- Book tickets for available trains.
+- Select travel class, number of seats, and berth preference where applicable.
+- Select a payment method.
+- Generate a unique Passenger Name Record (PNR).
+- Calculate ticket fare.
+
+### Ticket Cancellation
+- Cancel booked tickets using the PNR.
+- Calculate the cancellation fee and refund amount.
+- Update booking status and seat availability.
+
+### Booking Management
+- View booking history.
+- Check booking and cancellation status using the PNR.
+- View seat availability for different travel classes.
+
+### Data Management
+- Store application information using text files.
+- Maintain train and reservation data between program executions.
+- Record relevant application activities where supported.
+
+## 4. Project Files
+
+| File | Description |
+|---|---|
+| `railway_sprint2.cpp` | Main C++ source code for Sprint 2 |
+| `README_Sprint2.md` | Sprint 2 documentation |
+| `build_linux.sh` | Script for compiling the project on Linux |
+| `trains.txt` | Sample train data |
+
+## 5. System Requirements
+- A C++ compiler supporting C++17.
+- Windows with MinGW/MSYS2, or a Linux environment.
+- A terminal or command prompt.
+
+## 6. Compilation and Execution
+
+### Windows — Using MinGW/MSYS2 UCRT64
+
+Open the terminal in the directory containing the source file and run:
+
+```bash
+g++ -std=c++17 -Wall -Wextra -pedantic railway_sprint2.cpp -o railway_sprint2.exe
+```
+
+Run the program:
+
+```bash
+./railway_sprint2.exe
+```
+
+### Linux
+
+Open a terminal in the project directory and run:
+
+```bash
+chmod +x build_linux.sh
+./build_linux.sh
+```
+
+If the script builds the executable as `railway_sprint2`, run:
+
+```bash
+./railway_sprint2
+```
+
+## 7. Testing
+
+The following features were exercised during Sprint 2 testing:
+
+- Admin login.
+- Adding, updating, and removing train records.
+- Configuring seat inventory.
+- Passenger registration and login.
+- Handling repeated failed login attempts.
+- Searching for trains.
+- Booking tickets and generating PNRs.
+- Calculating fares.
+- Cancelling tickets and calculating refunds.
+- Viewing booking history.
+- Checking booking status using a PNR.
+- Displaying seat availability.
+
+Additional verification should be performed for overbooking prevention, seat restoration after cancellation, invalid inputs, duplicate train records, and Linux execution.
+
+## 8. Limitations
+- The application uses a console-based interface.
+- Text files are used for data persistence.
+- The application is an academic project and is not intended for production railway reservations.
+- Security mechanisms are educational and should not be considered production-grade authentication.
+
+## 9. Future Enhancements
+- Integrate a database for reliable data management.
+- Improve password security.
+- Add a graphical user interface or web interface.
+- Introduce automated unit and integration tests.
+- Improve error handling and input validation.
+
+## 10. Conclusion
+Sprint 2 extends the Railway Ticket Booking System with train administration, passenger authentication, ticket reservation and cancellation, fare and refund calculations, and reservation tracking. The project demonstrates C++ programming, file handling, modular application development, and basic software testing.
