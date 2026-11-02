@@ -1,0 +1,25 @@
+========================================
+ RAILWAY RESERVATION SYSTEM - SPRINT 2
+========================================
+Demo data only; payment/refunds are simulated. Admin login: admin / Railway@123
+
+Welcome Menu
+1. Register passenger
+2. Login
+3. Search trains (guest)
+4. View all trains (guest)
+5. View cities/stations
+0. Exit
+Choose: 
+--- Passenger Registration ---
+Full name: Contact number (or username): That contact is already registered.
+
+Welcome Menu
+1. Register passenger
+2. Login
+3. Search trains (guest)
+4. View all trains (guest)
+5. View cities/stations
+0. Exit
+Choose: Invalid input. Enter a whole number from 0 to 5.
+Choose: Thank you for using the Railway Reservation System.

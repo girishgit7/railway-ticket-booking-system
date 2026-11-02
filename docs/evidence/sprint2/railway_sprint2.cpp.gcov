@@ -1,0 +1,5165 @@
+        -:    0:Source:railway_sprint2.cpp
+        -:    0:Graph:railway_sprint2.gcno
+        -:    0:Data:railway_sprint2.gcda
+        -:    0:Runs:40
+        -:    1:#include <iostream>
+        -:    2:#include <fstream>
+        -:    3:#include <sstream>
+        -:    4:#include <vector>
+        -:    5:#include <string>
+        -:    6:#include <iomanip>
+        -:    7:#include <limits>
+        -:    8:#include <algorithm>
+        -:    9:#include <ctime>
+        -:   10:#include <cctype>
+        -:   11:#include <cstdio>
+        -:   12:#ifdef _WIN32
+        -:   13:#include <conio.h>
+        -:   14:#else
+        -:   15:#include <termios.h>
+        -:   16:#include <unistd.h>
+        -:   17:#endif
+        -:   18:
+        -:   19:using namespace std;
+        -:   20:
+        -:   21:/*
+        -:   22: Railway Reservation System - Sprint 1 MVP
+        -:   23: Sprint 1 scope implemented:
+        -:   24:   - Search trains by source, destination, journey date
+        -:   25:   - Show Sleeper / AC / General availability
+        -:   26:   - Book seats with passenger name, class, berth preference
+        -:   27:   - Calculate a demo fare and record simulated payment mode
+        -:   28:   - Generate unique PNR and display ticket
+        -:   29:   - Persist trains/bookings across restarts
+        -:   30: Out of Sprint 1 scope: registration/login, cancellation/refunds,
+        -:   31: admin schedule editing, and reporting.
+        -:   32:*/
+        -:   33:
+        -:   34:const string TRAIN_FILE = "trains.txt";
+        -:   35:const string BOOKING_FILE = "bookings.txt";
+        -:   36:const string AUDIT_FILE = "audit.log";
+        -:   37:const string USER_FILE = "users.txt";
+        -:   38:const string ADMIN_CONTACT = "admin";
+        -:   39:const string ADMIN_PASSWORD = "Railway@123";
+        -:   40:string currentUserName;
+        -:   41:string currentUserContact;
+        -:   42:bool isAdmin = false;
+        -:   43:
+        -:   44:struct Train {
+        -:   45:    int number{};
+        -:   46:    string name, source, destination, departure, arrival;
+        -:   47:    int sleeperTotal{}, acTotal{}, generalTotal{};
+        -:   48:    double sleeperFare{}, acFare{}, generalFare{};
+        -:   49:};
+        -:   50:
+        -:   51:struct Booking {
+        -:   52:    long long pnr{};
+        -:   53:    string passenger, trainDate, className, berth, paymentMode, status;
+        -:   54:    string ownerContact;
+        -:   55:    double refund{};
+        -:   56:    int trainNumber{}, seats{};
+        -:   57:    double fare{};
+        -:   58:};
+        -:   59:
+function _Z5cleanNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE called 268 returned 100% blocks executed 100%
+      268:   60:string clean(string s) {
+        -:   61:    // The file format uses '|'; replace it so user input cannot corrupt records.
+      268:   62:    replace(s.begin(), s.end(), '|', '/');
+call    0 returned 268
+call    1 returned 268
+call    2 returned 268
+      268:   63:    return s;
+call    0 returned 268
+        -:   64:}
+        -:   65:
+function _Z9lowerCopyNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE called 1230 returned 100% blocks executed 100%
+     1230:   66:string lowerCopy(string s) {
+     1230:   67:    transform(s.begin(), s.end(), s.begin(),
+call    0 returned 1230
+call    1 returned 1230
+call    2 returned 1230
+call    3 returned 1230
+function _ZZ9lowerCopyNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEENKUlhE_clEh called 10164 returned 100% blocks executed 100%
+    10164:   68:              [](unsigned char c) { return static_cast<char>(tolower(c)); });
+     1230:   69:    return s;
+call    0 returned 1230
+        -:   70:}
+        -:   71:
+function _Z8readLineRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE called 132 returned 100% blocks executed 67%
+      132:   72:string readLine(const string& prompt) {
+      132:   73:    cout << prompt;
+call    0 returned 132
+branch  1 taken 132 (fallthrough)
+branch  2 taken 0 (throw)
+      132:   74:    string s;
+call    0 returned 132
+      132:   75:    getline(cin, s);
+call    0 returned 132
+branch  1 taken 132 (fallthrough)
+branch  2 taken 0 (throw)
+      264:   76:    return clean(s);
+call    0 returned 132
+branch  1 taken 132 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 132
+branch  4 taken 132 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 132
+call    7 never executed
+      132:   77:}
+call    0 returned 132
+call    1 never executed
+        -:   78:
+function _Z7readIntRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEii called 210 returned 100% blocks executed 90%
+      210:   79:int readInt(const string& prompt, int minValue, int maxValue) {
+        -:   80:    while (true) {
+      216:   81:        cout << prompt;
+call    0 returned 216
+branch  1 taken 216 (fallthrough)
+branch  2 taken 0 (throw)
+      216:   82:        string line;
+call    0 returned 216
+      216:   83:        getline(cin, line);
+call    0 returned 216
+branch  1 taken 216 (fallthrough)
+branch  2 taken 0 (throw)
+      216:   84:        stringstream ss(line);
+call    0 returned 216
+call    1 returned 216
+branch  2 taken 216 (fallthrough)
+branch  3 taken 0 (throw)
+        -:   85:        int value;
+        -:   86:        char extra;
+      216:   87:        if (ss >> value && !(ss >> extra) && value >= minValue && value <= maxValue)
+call    0 returned 216
+branch  1 taken 216 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 216
+branch  4 taken 216 (fallthrough)
+branch  5 taken 0 (throw)
+branch  6 taken 214 (fallthrough)
+branch  7 taken 2
+call    8 returned 214
+branch  9 taken 214 (fallthrough)
+branch 10 taken 0 (throw)
+call   11 returned 214
+branch 12 taken 214 (fallthrough)
+branch 13 taken 0 (throw)
+branch 14 taken 214 (fallthrough)
+branch 15 taken 0
+branch 16 taken 214 (fallthrough)
+branch 17 taken 0
+branch 18 taken 210 (fallthrough)
+branch 19 taken 4
+branch 20 taken 210 (fallthrough)
+branch 21 taken 6
+      420:   88:            return value;
+        6:   89:        cout << "Invalid input. Enter a whole number from " << minValue
+call    0 returned 6
+branch  1 taken 6 (fallthrough)
+branch  2 taken 0 (throw)
+        6:   90:             << " to " << maxValue << ".\n";
+call    0 returned 6
+branch  1 taken 6 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 6
+branch  4 taken 6 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 6
+branch  7 taken 6 (fallthrough)
+branch  8 taken 0 (throw)
+call    9 returned 6
+branch 10 taken 6 (fallthrough)
+branch 11 taken 0 (throw)
+      432:   91:    }
+call    0 returned 216
+branch  1 taken 6 (fallthrough)
+branch  2 taken 210
+call    3 returned 216
+branch  4 taken 6 (fallthrough)
+branch  5 taken 210
+call    6 never executed
+call    7 never executed
+        -:   92:}
+        -:   93:
+function _Z9validDateRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE called 18 returned 100% blocks executed 72%
+       18:   94:bool validDate(const string& date) {
+      18*:   95:    if (date.size() != 10 || date[4] != '-' || date[7] != '-') return false;
+call    0 returned 18
+branch  1 taken 18 (fallthrough)
+branch  2 taken 0
+call    3 returned 18
+branch  4 taken 18 (fallthrough)
+branch  5 taken 0
+call    6 returned 18
+branch  7 taken 0 (fallthrough)
+branch  8 taken 18
+branch  9 taken 0 (fallthrough)
+branch 10 taken 18
+      198:   96:    for (int i = 0; i < 10; ++i) {
+branch  0 taken 180
+branch  1 taken 18 (fallthrough)
+      180:   97:        if (i == 4 || i == 7) continue;
+branch  0 taken 162 (fallthrough)
+branch  1 taken 18
+branch  2 taken 18 (fallthrough)
+branch  3 taken 144
+     144*:   98:        if (!isdigit(static_cast<unsigned char>(date[i]))) return false;
+call    0 returned 144
+branch  1 taken 0 (fallthrough)
+branch  2 taken 144
+        -:   99:    }
+       18:  100:    int year = stoi(date.substr(0, 4)), month = stoi(date.substr(5, 2)), day = stoi(date.substr(8, 2));
+call    0 returned 18
+branch  1 taken 18 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 18
+branch  4 taken 18 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 18
+call    7 returned 18
+branch  8 taken 18 (fallthrough)
+branch  9 taken 0 (throw)
+call   10 returned 18
+branch 11 taken 18 (fallthrough)
+branch 12 taken 0 (throw)
+call   13 returned 18
+call   14 returned 18
+branch 15 taken 18 (fallthrough)
+branch 16 taken 0 (throw)
+call   17 returned 18
+branch 18 taken 18 (fallthrough)
+branch 19 taken 0 (throw)
+call   20 returned 18
+call   21 never executed
+call   22 never executed
+call   23 never executed
+      18*:  101:    if (year < 2020 || month < 1 || month > 12) return false;
+branch  0 taken 18 (fallthrough)
+branch  1 taken 0
+branch  2 taken 18 (fallthrough)
+branch  3 taken 0
+branch  4 taken 0 (fallthrough)
+branch  5 taken 18
+       18:  102:    const int days[] = {31,28,31,30,31,30,31,31,30,31,30,31};
+       18:  103:    int maxDay = days[month-1];
+      18*:  104:    bool leap = (year % 400 == 0) || (year % 4 == 0 && year % 100 != 0);
+branch  0 taken 18 (fallthrough)
+branch  1 taken 0
+branch  2 taken 0 (fallthrough)
+branch  3 taken 18
+branch  4 never executed (fallthrough)
+branch  5 never executed
+      18*:  105:    if (month == 2 && leap) maxDay = 29;
+branch  0 taken 2 (fallthrough)
+branch  1 taken 16
+branch  2 taken 0 (fallthrough)
+branch  3 taken 2
+       18:  106:    return day >= 1 && day <= maxDay;
+branch  0 taken 18 (fallthrough)
+branch  1 taken 0
+branch  2 taken 16 (fallthrough)
+branch  3 taken 2
+        -:  107:}
+        -:  108:
+function _Z8readDateB5cxx11v called 16 returned 100% blocks executed 71%
+       16:  109:string readDate() {
+        -:  110:    while (true) {
+       18:  111:        string date = readLine("Journey date (YYYY-MM-DD): ");
+call    0 returned 18
+branch  1 taken 18 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 18
+branch  4 taken 18 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 18
+call    7 never executed
+       34:  112:        if (validDate(date)) return date;
+call    0 returned 18
+branch  1 taken 18 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 16 (fallthrough)
+branch  4 taken 2
+call    5 returned 16
+        2:  113:        cout << "Please use YYYY-MM-DD format (for example, 2026-11-05).\n";
+call    0 returned 2
+branch  1 taken 2 (fallthrough)
+branch  2 taken 0 (throw)
+       20:  114:    }
+call    0 returned 18
+branch  1 taken 2 (fallthrough)
+branch  2 taken 16
+call    3 never executed
+        -:  115:}
+        -:  116:
+function _Z10demoTrainsv called 40 returned 100% blocks executed 26%
+       40:  117:vector<Train> demoTrains() {
+        -:  118:    // Illustrative sample routes for the Sprint 1 demo; not live railway data.
+        -:  119:    return {
+        -:  120:        {12627, "Karnataka Express", "Bengaluru", "New Delhi", "19:20", "10:30", 80, 32, 100, 850, 2100, 420},
+        -:  121:        {12007, "Shatabdi Express", "Bengaluru", "Chennai", "06:00", "11:00", 0, 40, 60, 0, 950, 280},
+        -:  122:        {16526, "Kanyakumari Express", "Bengaluru", "Chennai", "20:10", "04:45", 70, 20, 90, 430, 1150, 220},
+        -:  123:        {12640, "Brindavan Express", "Chennai", "Bengaluru", "07:50", "13:15", 0, 30, 70, 0, 800, 250},
+        -:  124:        {22691, "Rajdhani Express", "Bengaluru", "New Delhi", "20:00", "05:50", 0, 48, 0, 0, 2600, 0},
+        -:  125:        {12608, "Lalbagh Express", "Bengaluru", "Chennai", "06:30", "12:45", 70, 24, 90, 390, 980, 210},
+        -:  126:        {12609, "Mysuru Express", "Chennai", "Mysuru", "22:30", "08:20", 80, 24, 100, 420, 1100, 230},
+        -:  127:        {16591, "Hampi Express", "Bengaluru", "Hubballi", "22:00", "07:15", 75, 20, 100, 360, 900, 190},
+        -:  128:        {17310, "Vasco Express", "Bengaluru", "Goa", "20:00", "09:30", 80, 24, 90, 400, 1050, 210},
+        -:  129:        {16210, "Mysuru Express", "Bengaluru", "Mysuru", "08:00", "10:45", 50, 16, 80, 180, 450, 100},
+        -:  130:        {12650, "Karnataka Sampark Kranti", "Yeshvantpur", "New Delhi", "13:30", "15:00", 90, 32, 0, 780, 1950, 0},
+        -:  131:        {12678, "Ernakulam Express", "Bengaluru", "Kochi", "19:00", "08:00", 80, 24, 100, 420, 1150, 220},
+        -:  132:        {16527, "Kannur Express", "Bengaluru", "Mangaluru", "20:00", "08:30", 75, 20, 90, 390, 980, 200},
+        -:  133:        {12295, "Sanghamitra Express", "Bengaluru", "Patna", "09:00", "20:00", 100, 32, 120, 900, 2200, 450},
+        -:  134:        {12864, "Howrah Express", "Bengaluru", "Kolkata", "22:30", "06:00", 100, 32, 120, 950, 2350, 480},
+        -:  135:        {12616, "Grand Trunk Express", "Chennai", "New Delhi", "18:40", "06:20", 100, 32, 120, 850, 2100, 430},
+        -:  136:        {12622, "Tamil Nadu Express", "Chennai", "New Delhi", "22:00", "07:00", 100, 36, 120, 900, 2250, 450},
+        -:  137:        {12656, "Navjeevan Express", "Chennai", "Ahmedabad", "10:00", "19:30", 100, 32, 120, 850, 2050, 420},
+        -:  138:        {12968, "Jaipur Express", "Chennai", "Jaipur", "17:00", "08:00", 100, 32, 120, 950, 2300, 470},
+        -:  139:        {12618, "Mangala Lakshadweep Express", "Ernakulam", "Mumbai", "10:00", "13:30", 100, 32, 120, 700, 1750, 350},
+        -:  140:        {12164, "Chennai Express", "Mumbai", "Chennai", "20:30", "22:00", 100, 36, 120, 750, 1850, 380},
+        -:  141:        {11013, "Coimbatore Express", "Mumbai", "Coimbatore", "16:00", "20:30", 100, 32, 120, 720, 1800, 360},
+        -:  142:        {12952, "Mumbai Rajdhani", "Mumbai", "New Delhi", "17:00", "08:30", 0, 48, 0, 0, 2800, 0},
+        -:  143:        {12009, "Shatabdi Express", "Mumbai", "Ahmedabad", "06:25", "12:40", 0, 40, 60, 0, 1050, 300},
+        -:  144:        {12951, "Mumbai Rajdhani", "New Delhi", "Mumbai", "16:30", "08:15", 0, 48, 0, 0, 2800, 0},
+        -:  145:        {12301, "Howrah Rajdhani", "New Delhi", "Kolkata", "16:50", "09:55", 0, 48, 0, 0, 2700, 0},
+        -:  146:        {12002, "Bhopal Shatabdi", "New Delhi", "Bhopal", "06:00", "14:00", 0, 40, 60, 0, 1500, 350},
+        -:  147:        {12424, "Dibrugarh Rajdhani", "New Delhi", "Guwahati", "16:20", "10:00", 0, 48, 0, 0, 2900, 0},
+        -:  148:        {12840, "Chennai Mail", "Chennai", "Kolkata", "19:00", "04:30", 100, 32, 120, 900, 2200, 450},
+        -:  149:        {16346, "Netravati Express", "Thiruvananthapuram", "Mumbai", "09:00", "17:00", 100, 32, 120, 780, 1900, 390},
+        -:  150:        {16382, "Kanyakumari Express", "Kanyakumari", "Bengaluru", "17:30", "08:15", 90, 24, 100, 450, 1150, 230},
+        -:  151:        {17230, "Sabari Express", "Hyderabad", "Thiruvananthapuram", "12:00", "16:00", 100, 32, 120, 800, 1950, 400},
+        -:  152:        {12702, "Hussain Sagar Express", "Hyderabad", "Mumbai", "14:00", "05:30", 100, 32, 120, 650, 1650, 330},
+        -:  153:        {12723, "Telangana Express", "Hyderabad", "New Delhi", "06:00", "07:00", 100, 36, 120, 850, 2150, 440},
+        -:  154:        {17030, "Hyderabad Express", "Hyderabad", "Chennai", "20:00", "08:30", 80, 24, 100, 430, 1100, 220},
+        -:  155:        {17613, "Nanded Express", "Hyderabad", "Pune", "21:00", "08:30", 80, 24, 100, 400, 980, 200},
+        -:  156:        {11020, "Konark Express", "Bhubaneswar", "Mumbai", "15:00", "05:00", 100, 32, 120, 750, 1850, 380},
+        -:  157:        {12801, "Purushottam Express", "Puri", "New Delhi", "21:45", "04:00", 100, 32, 120, 900, 2200, 450},
+        -:  158:        {18477, "Utkal Express", "Puri", "Haridwar", "20:00", "08:00", 100, 32, 120, 850, 2100, 430},
+        -:  159:        {19020, "Dehradun Express", "Dehradun", "Mumbai", "10:00", "16:00", 100, 32, 120, 780, 1900, 390},
+        -:  160:        {12028, "Shatabdi Express", "Chandigarh", "New Delhi", "07:00", "10:20", 0, 40, 60, 0, 900, 260}
+     1760:  161:    };
+call    0 returned 40
+branch  1 taken 40 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 1640 (fallthrough)
+branch  4 taken 40
+call    5 returned 1640
+branch  6 never executed (fallthrough)
+branch  7 never executed
+call    8 never executed
+      120:  162:}
+call    0 returned 40
+branch  1 taken 40 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 40
+branch  4 taken 40 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 40
+branch  7 taken 40 (fallthrough)
+branch  8 taken 0 (throw)
+call    9 returned 40
+branch 10 taken 40 (fallthrough)
+branch 11 taken 0 (throw)
+call   12 returned 40
+branch 13 taken 40 (fallthrough)
+branch 14 taken 0 (throw)
+call   15 returned 40
+branch 16 taken 40 (fallthrough)
+branch 17 taken 0 (throw)
+call   18 returned 40
+branch 19 taken 40 (fallthrough)
+branch 20 taken 0 (throw)
+call   21 returned 40
+branch 22 taken 40 (fallthrough)
+branch 23 taken 0 (throw)
+call   24 returned 40
+branch 25 taken 40 (fallthrough)
+branch 26 taken 0 (throw)
+call   27 returned 40
+branch 28 taken 40 (fallthrough)
+branch 29 taken 0 (throw)
+call   30 returned 40
+branch 31 taken 40 (fallthrough)
+branch 32 taken 0 (throw)
+call   33 returned 40
+branch 34 taken 40 (fallthrough)
+branch 35 taken 0 (throw)
+call   36 returned 40
+branch 37 taken 40 (fallthrough)
+branch 38 taken 0 (throw)
+call   39 returned 40
+branch 40 taken 40 (fallthrough)
+branch 41 taken 0 (throw)
+call   42 returned 40
+branch 43 taken 40 (fallthrough)
+branch 44 taken 0 (throw)
+call   45 returned 40
+branch 46 taken 40 (fallthrough)
+branch 47 taken 0 (throw)
+call   48 returned 40
+branch 49 taken 40 (fallthrough)
+branch 50 taken 0 (throw)
+call   51 returned 40
+branch 52 taken 40 (fallthrough)
+branch 53 taken 0 (throw)
+call   54 returned 40
+branch 55 taken 40 (fallthrough)
+branch 56 taken 0 (throw)
+call   57 returned 40
+branch 58 taken 40 (fallthrough)
+branch 59 taken 0 (throw)
+call   60 returned 40
+branch 61 taken 40 (fallthrough)
+branch 62 taken 0 (throw)
+call   63 returned 40
+branch 64 taken 40 (fallthrough)
+branch 65 taken 0 (throw)
+call   66 returned 40
+branch 67 taken 40 (fallthrough)
+branch 68 taken 0 (throw)
+call   69 returned 40
+branch 70 taken 40 (fallthrough)
+branch 71 taken 0 (throw)
+call   72 returned 40
+branch 73 taken 40 (fallthrough)
+branch 74 taken 0 (throw)
+call   75 returned 40
+branch 76 taken 40 (fallthrough)
+branch 77 taken 0 (throw)
+call   78 returned 40
+branch 79 taken 40 (fallthrough)
+branch 80 taken 0 (throw)
+call   81 returned 40
+branch 82 taken 40 (fallthrough)
+branch 83 taken 0 (throw)
+call   84 returned 40
+branch 85 taken 40 (fallthrough)
+branch 86 taken 0 (throw)
+call   87 returned 40
+branch 88 taken 40 (fallthrough)
+branch 89 taken 0 (throw)
+call   90 returned 40
+branch 91 taken 40 (fallthrough)
+branch 92 taken 0 (throw)
+call   93 returned 40
+branch 94 taken 40 (fallthrough)
+branch 95 taken 0 (throw)
+call   96 returned 40
+branch 97 taken 40 (fallthrough)
+branch 98 taken 0 (throw)
+call   99 returned 40
+branch 100 taken 40 (fallthrough)
+branch 101 taken 0 (throw)
+call   102 returned 40
+branch 103 taken 40 (fallthrough)
+branch 104 taken 0 (throw)
+call   105 returned 40
+branch 106 taken 40 (fallthrough)
+branch 107 taken 0 (throw)
+call   108 returned 40
+branch 109 taken 40 (fallthrough)
+branch 110 taken 0 (throw)
+call   111 returned 40
+branch 112 taken 40 (fallthrough)
+branch 113 taken 0 (throw)
+call   114 returned 40
+branch 115 taken 40 (fallthrough)
+branch 116 taken 0 (throw)
+call   117 returned 40
+branch 118 taken 40 (fallthrough)
+branch 119 taken 0 (throw)
+call   120 returned 40
+branch 121 taken 40 (fallthrough)
+branch 122 taken 0 (throw)
+call   123 returned 40
+branch 124 taken 40 (fallthrough)
+branch 125 taken 0 (throw)
+call   126 returned 40
+branch 127 taken 40 (fallthrough)
+branch 128 taken 0 (throw)
+call   129 returned 40
+branch 130 taken 40 (fallthrough)
+branch 131 taken 0 (throw)
+call   132 returned 40
+branch 133 taken 40 (fallthrough)
+branch 134 taken 0 (throw)
+call   135 returned 40
+branch 136 taken 40 (fallthrough)
+branch 137 taken 0 (throw)
+call   138 returned 40
+branch 139 taken 40 (fallthrough)
+branch 140 taken 0 (throw)
+call   141 returned 40
+branch 142 taken 40 (fallthrough)
+branch 143 taken 0 (throw)
+call   144 returned 40
+branch 145 taken 40 (fallthrough)
+branch 146 taken 0 (throw)
+call   147 returned 40
+branch 148 taken 40 (fallthrough)
+branch 149 taken 0 (throw)
+call   150 returned 40
+branch 151 taken 40 (fallthrough)
+branch 152 taken 0 (throw)
+call   153 returned 40
+branch 154 taken 40 (fallthrough)
+branch 155 taken 0 (throw)
+call   156 returned 40
+branch 157 taken 40 (fallthrough)
+branch 158 taken 0 (throw)
+call   159 returned 40
+branch 160 taken 40 (fallthrough)
+branch 161 taken 0 (throw)
+call   162 returned 40
+branch 163 taken 40 (fallthrough)
+branch 164 taken 0 (throw)
+call   165 returned 40
+branch 166 taken 40 (fallthrough)
+branch 167 taken 0 (throw)
+call   168 returned 40
+branch 169 taken 40 (fallthrough)
+branch 170 taken 0 (throw)
+call   171 returned 40
+branch 172 taken 40 (fallthrough)
+branch 173 taken 0 (throw)
+call   174 returned 40
+branch 175 taken 40 (fallthrough)
+branch 176 taken 0 (throw)
+call   177 returned 40
+branch 178 taken 40 (fallthrough)
+branch 179 taken 0 (throw)
+call   180 returned 40
+branch 181 taken 40 (fallthrough)
+branch 182 taken 0 (throw)
+call   183 returned 40
+branch 184 taken 40 (fallthrough)
+branch 185 taken 0 (throw)
+call   186 returned 40
+branch 187 taken 40 (fallthrough)
+branch 188 taken 0 (throw)
+call   189 returned 40
+branch 190 taken 40 (fallthrough)
+branch 191 taken 0 (throw)
+call   192 returned 40
+branch 193 taken 40 (fallthrough)
+branch 194 taken 0 (throw)
+call   195 returned 40
+branch 196 taken 40 (fallthrough)
+branch 197 taken 0 (throw)
+call   198 returned 40
+branch 199 taken 40 (fallthrough)
+branch 200 taken 0 (throw)
+call   201 returned 40
+branch 202 taken 40 (fallthrough)
+branch 203 taken 0 (throw)
+call   204 returned 40
+branch 205 taken 40 (fallthrough)
+branch 206 taken 0 (throw)
+call   207 returned 40
+branch 208 taken 40 (fallthrough)
+branch 209 taken 0 (throw)
+call   210 returned 40
+branch 211 taken 40 (fallthrough)
+branch 212 taken 0 (throw)
+call   213 returned 40
+branch 214 taken 40 (fallthrough)
+branch 215 taken 0 (throw)
+call   216 returned 40
+branch 217 taken 40 (fallthrough)
+branch 218 taken 0 (throw)
+call   219 returned 40
+branch 220 taken 40 (fallthrough)
+branch 221 taken 0 (throw)
+call   222 returned 40
+branch 223 taken 40 (fallthrough)
+branch 224 taken 0 (throw)
+call   225 returned 40
+branch 226 taken 40 (fallthrough)
+branch 227 taken 0 (throw)
+call   228 returned 40
+branch 229 taken 40 (fallthrough)
+branch 230 taken 0 (throw)
+call   231 returned 40
+branch 232 taken 40 (fallthrough)
+branch 233 taken 0 (throw)
+call   234 returned 40
+branch 235 taken 40 (fallthrough)
+branch 236 taken 0 (throw)
+call   237 returned 40
+branch 238 taken 40 (fallthrough)
+branch 239 taken 0 (throw)
+call   240 returned 40
+branch 241 taken 40 (fallthrough)
+branch 242 taken 0 (throw)
+call   243 returned 40
+branch 244 taken 40 (fallthrough)
+branch 245 taken 0 (throw)
+call   246 returned 40
+branch 247 taken 40 (fallthrough)
+branch 248 taken 0 (throw)
+call   249 returned 40
+branch 250 taken 40 (fallthrough)
+branch 251 taken 0 (throw)
+call   252 returned 40
+branch 253 taken 40 (fallthrough)
+branch 254 taken 0 (throw)
+call   255 returned 40
+branch 256 taken 40 (fallthrough)
+branch 257 taken 0 (throw)
+call   258 returned 40
+branch 259 taken 40 (fallthrough)
+branch 260 taken 0 (throw)
+call   261 returned 40
+branch 262 taken 40 (fallthrough)
+branch 263 taken 0 (throw)
+call   264 returned 40
+branch 265 taken 40 (fallthrough)
+branch 266 taken 0 (throw)
+call   267 returned 40
+branch 268 taken 40 (fallthrough)
+branch 269 taken 0 (throw)
+call   270 returned 40
+branch 271 taken 40 (fallthrough)
+branch 272 taken 0 (throw)
+call   273 returned 40
+branch 274 taken 40 (fallthrough)
+branch 275 taken 0 (throw)
+call   276 returned 40
+branch 277 taken 40 (fallthrough)
+branch 278 taken 0 (throw)
+call   279 returned 40
+branch 280 taken 40 (fallthrough)
+branch 281 taken 0 (throw)
+call   282 returned 40
+branch 283 taken 40 (fallthrough)
+branch 284 taken 0 (throw)
+call   285 returned 40
+branch 286 taken 40 (fallthrough)
+branch 287 taken 0 (throw)
+call   288 returned 40
+branch 289 taken 40 (fallthrough)
+branch 290 taken 0 (throw)
+call   291 returned 40
+branch 292 taken 40 (fallthrough)
+branch 293 taken 0 (throw)
+call   294 returned 40
+branch 295 taken 40 (fallthrough)
+branch 296 taken 0 (throw)
+call   297 returned 40
+branch 298 taken 40 (fallthrough)
+branch 299 taken 0 (throw)
+call   300 returned 40
+branch 301 taken 40 (fallthrough)
+branch 302 taken 0 (throw)
+call   303 returned 40
+branch 304 taken 40 (fallthrough)
+branch 305 taken 0 (throw)
+call   306 returned 40
+branch 307 taken 40 (fallthrough)
+branch 308 taken 0 (throw)
+call   309 returned 40
+branch 310 taken 40 (fallthrough)
+branch 311 taken 0 (throw)
+call   312 returned 40
+branch 313 taken 40 (fallthrough)
+branch 314 taken 0 (throw)
+call   315 returned 40
+branch 316 taken 40 (fallthrough)
+branch 317 taken 0 (throw)
+call   318 returned 40
+branch 319 taken 40 (fallthrough)
+branch 320 taken 0 (throw)
+call   321 returned 40
+branch 322 taken 40 (fallthrough)
+branch 323 taken 0 (throw)
+call   324 returned 40
+branch 325 taken 40 (fallthrough)
+branch 326 taken 0 (throw)
+call   327 returned 40
+branch 328 taken 40 (fallthrough)
+branch 329 taken 0 (throw)
+call   330 returned 40
+branch 331 taken 40 (fallthrough)
+branch 332 taken 0 (throw)
+call   333 returned 40
+branch 334 taken 40 (fallthrough)
+branch 335 taken 0 (throw)
+call   336 returned 40
+branch 337 taken 40 (fallthrough)
+branch 338 taken 0 (throw)
+call   339 returned 40
+branch 340 taken 40 (fallthrough)
+branch 341 taken 0 (throw)
+call   342 returned 40
+branch 343 taken 40 (fallthrough)
+branch 344 taken 0 (throw)
+call   345 returned 40
+branch 346 taken 40 (fallthrough)
+branch 347 taken 0 (throw)
+call   348 returned 40
+branch 349 taken 40 (fallthrough)
+branch 350 taken 0 (throw)
+call   351 returned 40
+branch 352 taken 40 (fallthrough)
+branch 353 taken 0 (throw)
+call   354 returned 40
+branch 355 taken 40 (fallthrough)
+branch 356 taken 0 (throw)
+call   357 returned 40
+branch 358 taken 40 (fallthrough)
+branch 359 taken 0 (throw)
+call   360 returned 40
+branch 361 taken 40 (fallthrough)
+branch 362 taken 0 (throw)
+call   363 returned 40
+branch 364 taken 40 (fallthrough)
+branch 365 taken 0 (throw)
+call   366 returned 40
+branch 367 taken 40 (fallthrough)
+branch 368 taken 0 (throw)
+call   369 returned 40
+branch 370 taken 40 (fallthrough)
+branch 371 taken 0 (throw)
+call   372 returned 40
+branch 373 taken 40 (fallthrough)
+branch 374 taken 0 (throw)
+call   375 returned 40
+branch 376 taken 40 (fallthrough)
+branch 377 taken 0 (throw)
+call   378 returned 40
+branch 379 taken 40 (fallthrough)
+branch 380 taken 0 (throw)
+call   381 returned 40
+branch 382 taken 40 (fallthrough)
+branch 383 taken 0 (throw)
+call   384 returned 40
+branch 385 taken 40 (fallthrough)
+branch 386 taken 0 (throw)
+call   387 returned 40
+branch 388 taken 40 (fallthrough)
+branch 389 taken 0 (throw)
+call   390 returned 40
+branch 391 taken 40 (fallthrough)
+branch 392 taken 0 (throw)
+call   393 returned 40
+branch 394 taken 40 (fallthrough)
+branch 395 taken 0 (throw)
+call   396 returned 40
+branch 397 taken 40 (fallthrough)
+branch 398 taken 0 (throw)
+call   399 returned 40
+branch 400 taken 40 (fallthrough)
+branch 401 taken 0 (throw)
+call   402 returned 40
+branch 403 taken 40 (fallthrough)
+branch 404 taken 0 (throw)
+call   405 returned 40
+branch 406 taken 40 (fallthrough)
+branch 407 taken 0 (throw)
+call   408 returned 40
+branch 409 taken 40 (fallthrough)
+branch 410 taken 0 (throw)
+call   411 returned 40
+branch 412 taken 40 (fallthrough)
+branch 413 taken 0 (throw)
+call   414 returned 40
+branch 415 taken 40 (fallthrough)
+branch 416 taken 0 (throw)
+call   417 returned 40
+branch 418 taken 40 (fallthrough)
+branch 419 taken 0 (throw)
+call   420 returned 40
+branch 421 taken 40 (fallthrough)
+branch 422 taken 0 (throw)
+call   423 returned 40
+branch 424 taken 40 (fallthrough)
+branch 425 taken 0 (throw)
+call   426 returned 40
+branch 427 taken 40 (fallthrough)
+branch 428 taken 0 (throw)
+call   429 returned 40
+branch 430 taken 40 (fallthrough)
+branch 431 taken 0 (throw)
+call   432 returned 40
+branch 433 taken 40 (fallthrough)
+branch 434 taken 0 (throw)
+call   435 returned 40
+branch 436 taken 40 (fallthrough)
+branch 437 taken 0 (throw)
+call   438 returned 40
+branch 439 taken 40 (fallthrough)
+branch 440 taken 0 (throw)
+call   441 returned 40
+branch 442 taken 40 (fallthrough)
+branch 443 taken 0 (throw)
+call   444 returned 40
+branch 445 taken 40 (fallthrough)
+branch 446 taken 0 (throw)
+call   447 returned 40
+branch 448 taken 40 (fallthrough)
+branch 449 taken 0 (throw)
+call   450 returned 40
+branch 451 taken 40 (fallthrough)
+branch 452 taken 0 (throw)
+call   453 returned 40
+branch 454 taken 40 (fallthrough)
+branch 455 taken 0 (throw)
+call   456 returned 40
+branch 457 taken 40 (fallthrough)
+branch 458 taken 0 (throw)
+call   459 returned 40
+branch 460 taken 40 (fallthrough)
+branch 461 taken 0 (throw)
+call   462 returned 40
+branch 463 taken 40 (fallthrough)
+branch 464 taken 0 (throw)
+call   465 returned 40
+branch 466 taken 40 (fallthrough)
+branch 467 taken 0 (throw)
+call   468 returned 40
+branch 469 taken 40 (fallthrough)
+branch 470 taken 0 (throw)
+call   471 returned 40
+branch 472 taken 40 (fallthrough)
+branch 473 taken 0 (throw)
+call   474 returned 40
+branch 475 taken 40 (fallthrough)
+branch 476 taken 0 (throw)
+call   477 returned 40
+branch 478 taken 40 (fallthrough)
+branch 479 taken 0 (throw)
+call   480 returned 40
+branch 481 taken 40 (fallthrough)
+branch 482 taken 0 (throw)
+call   483 returned 40
+branch 484 taken 40 (fallthrough)
+branch 485 taken 0 (throw)
+call   486 returned 40
+branch 487 taken 40 (fallthrough)
+branch 488 taken 0 (throw)
+call   489 returned 40
+branch 490 taken 40 (fallthrough)
+branch 491 taken 0 (throw)
+call   492 returned 40
+branch 493 taken 40 (fallthrough)
+branch 494 taken 0 (throw)
+call   495 returned 40
+branch 496 taken 40 (fallthrough)
+branch 497 taken 0 (throw)
+call   498 returned 40
+branch 499 taken 40 (fallthrough)
+branch 500 taken 0 (throw)
+call   501 returned 40
+branch 502 taken 40 (fallthrough)
+branch 503 taken 0 (throw)
+call   504 returned 40
+branch 505 taken 40 (fallthrough)
+branch 506 taken 0 (throw)
+call   507 returned 40
+branch 508 taken 40 (fallthrough)
+branch 509 taken 0 (throw)
+call   510 returned 40
+branch 511 taken 40 (fallthrough)
+branch 512 taken 0 (throw)
+call   513 returned 40
+branch 514 taken 40 (fallthrough)
+branch 515 taken 0 (throw)
+call   516 returned 40
+branch 517 taken 40 (fallthrough)
+branch 518 taken 0 (throw)
+call   519 returned 40
+branch 520 taken 40 (fallthrough)
+branch 521 taken 0 (throw)
+call   522 returned 40
+branch 523 taken 40 (fallthrough)
+branch 524 taken 0 (throw)
+call   525 returned 40
+branch 526 taken 40 (fallthrough)
+branch 527 taken 0 (throw)
+call   528 returned 40
+branch 529 taken 40 (fallthrough)
+branch 530 taken 0 (throw)
+call   531 returned 40
+branch 532 taken 40 (fallthrough)
+branch 533 taken 0 (throw)
+call   534 returned 40
+branch 535 taken 40 (fallthrough)
+branch 536 taken 0 (throw)
+call   537 returned 40
+branch 538 taken 40 (fallthrough)
+branch 539 taken 0 (throw)
+call   540 returned 40
+branch 541 taken 40 (fallthrough)
+branch 542 taken 0 (throw)
+call   543 returned 40
+branch 544 taken 40 (fallthrough)
+branch 545 taken 0 (throw)
+call   546 returned 40
+branch 547 taken 40 (fallthrough)
+branch 548 taken 0 (throw)
+call   549 returned 40
+branch 550 taken 40 (fallthrough)
+branch 551 taken 0 (throw)
+call   552 returned 40
+branch 553 taken 40 (fallthrough)
+branch 554 taken 0 (throw)
+call   555 returned 40
+branch 556 taken 40 (fallthrough)
+branch 557 taken 0 (throw)
+call   558 returned 40
+branch 559 taken 40 (fallthrough)
+branch 560 taken 0 (throw)
+call   561 returned 40
+branch 562 taken 40 (fallthrough)
+branch 563 taken 0 (throw)
+call   564 returned 40
+branch 565 taken 40 (fallthrough)
+branch 566 taken 0 (throw)
+call   567 returned 40
+branch 568 taken 40 (fallthrough)
+branch 569 taken 0 (throw)
+call   570 returned 40
+branch 571 taken 40 (fallthrough)
+branch 572 taken 0 (throw)
+call   573 returned 40
+branch 574 taken 40 (fallthrough)
+branch 575 taken 0 (throw)
+call   576 returned 40
+branch 577 taken 40 (fallthrough)
+branch 578 taken 0 (throw)
+call   579 returned 40
+branch 580 taken 40 (fallthrough)
+branch 581 taken 0 (throw)
+call   582 returned 40
+branch 583 taken 40 (fallthrough)
+branch 584 taken 0 (throw)
+call   585 returned 40
+branch 586 taken 40 (fallthrough)
+branch 587 taken 0 (throw)
+call   588 returned 40
+branch 589 taken 40 (fallthrough)
+branch 590 taken 0 (throw)
+call   591 returned 40
+branch 592 taken 40 (fallthrough)
+branch 593 taken 0 (throw)
+call   594 returned 40
+branch 595 taken 40 (fallthrough)
+branch 596 taken 0 (throw)
+call   597 returned 40
+branch 598 taken 40 (fallthrough)
+branch 599 taken 0 (throw)
+call   600 returned 40
+branch 601 taken 40 (fallthrough)
+branch 602 taken 0 (throw)
+call   603 returned 40
+branch 604 taken 40 (fallthrough)
+branch 605 taken 0 (throw)
+call   606 returned 40
+branch 607 taken 40 (fallthrough)
+branch 608 taken 0 (throw)
+call   609 returned 40
+branch 610 taken 40 (fallthrough)
+branch 611 taken 0 (throw)
+call   612 returned 40
+branch 613 taken 40 (fallthrough)
+branch 614 taken 0 (throw)
+branch 615 never executed (fallthrough)
+branch 616 never executed
+call   617 never executed
+branch 618 never executed (fallthrough)
+branch 619 never executed
+call   620 never executed
+branch 621 never executed (fallthrough)
+branch 622 never executed
+call   623 never executed
+branch 624 never executed (fallthrough)
+branch 625 never executed
+call   626 never executed
+branch 627 never executed (fallthrough)
+branch 628 never executed
+call   629 never executed
+branch 630 never executed (fallthrough)
+branch 631 never executed
+call   632 never executed
+branch 633 never executed (fallthrough)
+branch 634 never executed
+call   635 never executed
+branch 636 never executed (fallthrough)
+branch 637 never executed
+call   638 never executed
+branch 639 never executed (fallthrough)
+branch 640 never executed
+call   641 never executed
+branch 642 never executed (fallthrough)
+branch 643 never executed
+call   644 never executed
+branch 645 never executed (fallthrough)
+branch 646 never executed
+call   647 never executed
+branch 648 never executed (fallthrough)
+branch 649 never executed
+call   650 never executed
+branch 651 never executed (fallthrough)
+branch 652 never executed
+call   653 never executed
+branch 654 never executed (fallthrough)
+branch 655 never executed
+call   656 never executed
+branch 657 never executed (fallthrough)
+branch 658 never executed
+call   659 never executed
+branch 660 never executed (fallthrough)
+branch 661 never executed
+call   662 never executed
+branch 663 never executed (fallthrough)
+branch 664 never executed
+call   665 never executed
+branch 666 never executed (fallthrough)
+branch 667 never executed
+call   668 never executed
+branch 669 never executed (fallthrough)
+branch 670 never executed
+call   671 never executed
+branch 672 never executed (fallthrough)
+branch 673 never executed
+call   674 never executed
+branch 675 never executed (fallthrough)
+branch 676 never executed
+call   677 never executed
+branch 678 never executed (fallthrough)
+branch 679 never executed
+call   680 never executed
+branch 681 never executed (fallthrough)
+branch 682 never executed
+call   683 never executed
+branch 684 never executed (fallthrough)
+branch 685 never executed
+call   686 never executed
+branch 687 never executed (fallthrough)
+branch 688 never executed
+call   689 never executed
+branch 690 never executed (fallthrough)
+branch 691 never executed
+call   692 never executed
+branch 693 never executed (fallthrough)
+branch 694 never executed
+call   695 never executed
+branch 696 never executed (fallthrough)
+branch 697 never executed
+call   698 never executed
+branch 699 never executed (fallthrough)
+branch 700 never executed
+call   701 never executed
+branch 702 never executed (fallthrough)
+branch 703 never executed
+call   704 never executed
+branch 705 never executed (fallthrough)
+branch 706 never executed
+call   707 never executed
+branch 708 never executed (fallthrough)
+branch 709 never executed
+call   710 never executed
+branch 711 never executed (fallthrough)
+branch 712 never executed
+call   713 never executed
+branch 714 never executed (fallthrough)
+branch 715 never executed
+call   716 never executed
+branch 717 never executed (fallthrough)
+branch 718 never executed
+call   719 never executed
+branch 720 never executed (fallthrough)
+branch 721 never executed
+call   722 never executed
+branch 723 never executed (fallthrough)
+branch 724 never executed
+call   725 never executed
+branch 726 never executed (fallthrough)
+branch 727 never executed
+call   728 never executed
+branch 729 never executed (fallthrough)
+branch 730 never executed
+call   731 never executed
+branch 732 never executed (fallthrough)
+branch 733 never executed
+call   734 never executed
+branch 735 never executed (fallthrough)
+branch 736 never executed
+call   737 never executed
+branch 738 never executed (fallthrough)
+branch 739 never executed
+call   740 never executed
+branch 741 never executed (fallthrough)
+branch 742 never executed
+call   743 never executed
+branch 744 never executed (fallthrough)
+branch 745 never executed
+call   746 never executed
+branch 747 never executed (fallthrough)
+branch 748 never executed
+call   749 never executed
+branch 750 never executed (fallthrough)
+branch 751 never executed
+call   752 never executed
+branch 753 never executed (fallthrough)
+branch 754 never executed
+call   755 never executed
+branch 756 never executed (fallthrough)
+branch 757 never executed
+call   758 never executed
+branch 759 never executed (fallthrough)
+branch 760 never executed
+call   761 never executed
+branch 762 never executed (fallthrough)
+branch 763 never executed
+call   764 never executed
+branch 765 never executed (fallthrough)
+branch 766 never executed
+call   767 never executed
+branch 768 never executed (fallthrough)
+branch 769 never executed
+call   770 never executed
+branch 771 never executed (fallthrough)
+branch 772 never executed
+call   773 never executed
+branch 774 never executed (fallthrough)
+branch 775 never executed
+call   776 never executed
+branch 777 never executed (fallthrough)
+branch 778 never executed
+call   779 never executed
+branch 780 never executed (fallthrough)
+branch 781 never executed
+call   782 never executed
+branch 783 never executed (fallthrough)
+branch 784 never executed
+call   785 never executed
+branch 786 never executed (fallthrough)
+branch 787 never executed
+call   788 never executed
+branch 789 never executed (fallthrough)
+branch 790 never executed
+call   791 never executed
+branch 792 never executed (fallthrough)
+branch 793 never executed
+call   794 never executed
+branch 795 never executed (fallthrough)
+branch 796 never executed
+call   797 never executed
+branch 798 never executed (fallthrough)
+branch 799 never executed
+call   800 never executed
+branch 801 never executed (fallthrough)
+branch 802 never executed
+call   803 never executed
+branch 804 never executed (fallthrough)
+branch 805 never executed
+call   806 never executed
+branch 807 never executed (fallthrough)
+branch 808 never executed
+call   809 never executed
+branch 810 never executed (fallthrough)
+branch 811 never executed
+call   812 never executed
+branch 813 never executed (fallthrough)
+branch 814 never executed
+call   815 never executed
+branch 816 never executed (fallthrough)
+branch 817 never executed
+call   818 never executed
+branch 819 never executed (fallthrough)
+branch 820 never executed
+call   821 never executed
+branch 822 never executed (fallthrough)
+branch 823 never executed
+call   824 never executed
+branch 825 never executed (fallthrough)
+branch 826 never executed
+call   827 never executed
+branch 828 never executed (fallthrough)
+branch 829 never executed
+call   830 never executed
+branch 831 never executed (fallthrough)
+branch 832 never executed
+call   833 never executed
+branch 834 never executed (fallthrough)
+branch 835 never executed
+call   836 never executed
+branch 837 never executed (fallthrough)
+branch 838 never executed
+call   839 never executed
+branch 840 never executed (fallthrough)
+branch 841 never executed
+call   842 never executed
+branch 843 never executed (fallthrough)
+branch 844 never executed
+call   845 never executed
+branch 846 never executed (fallthrough)
+branch 847 never executed
+call   848 never executed
+branch 849 never executed (fallthrough)
+branch 850 never executed
+call   851 never executed
+branch 852 never executed (fallthrough)
+branch 853 never executed
+call   854 never executed
+branch 855 never executed (fallthrough)
+branch 856 never executed
+call   857 never executed
+branch 858 never executed (fallthrough)
+branch 859 never executed
+call   860 never executed
+branch 861 never executed (fallthrough)
+branch 862 never executed
+call   863 never executed
+branch 864 never executed (fallthrough)
+branch 865 never executed
+call   866 never executed
+branch 867 never executed (fallthrough)
+branch 868 never executed
+call   869 never executed
+branch 870 never executed (fallthrough)
+branch 871 never executed
+call   872 never executed
+branch 873 never executed (fallthrough)
+branch 874 never executed
+call   875 never executed
+branch 876 never executed (fallthrough)
+branch 877 never executed
+call   878 never executed
+branch 879 never executed (fallthrough)
+branch 880 never executed
+call   881 never executed
+branch 882 never executed (fallthrough)
+branch 883 never executed
+call   884 never executed
+branch 885 never executed (fallthrough)
+branch 886 never executed
+call   887 never executed
+branch 888 never executed (fallthrough)
+branch 889 never executed
+call   890 never executed
+branch 891 never executed (fallthrough)
+branch 892 never executed
+call   893 never executed
+branch 894 never executed (fallthrough)
+branch 895 never executed
+call   896 never executed
+branch 897 never executed (fallthrough)
+branch 898 never executed
+call   899 never executed
+branch 900 never executed (fallthrough)
+branch 901 never executed
+call   902 never executed
+branch 903 never executed (fallthrough)
+branch 904 never executed
+call   905 never executed
+branch 906 never executed (fallthrough)
+branch 907 never executed
+call   908 never executed
+branch 909 never executed (fallthrough)
+branch 910 never executed
+call   911 never executed
+branch 912 never executed (fallthrough)
+branch 913 never executed
+call   914 never executed
+branch 915 never executed (fallthrough)
+branch 916 never executed
+call   917 never executed
+branch 918 never executed (fallthrough)
+branch 919 never executed
+call   920 never executed
+branch 921 never executed (fallthrough)
+branch 922 never executed
+call   923 never executed
+branch 924 never executed (fallthrough)
+branch 925 never executed
+call   926 never executed
+branch 927 never executed (fallthrough)
+branch 928 never executed
+call   929 never executed
+branch 930 never executed (fallthrough)
+branch 931 never executed
+call   932 never executed
+branch 933 never executed (fallthrough)
+branch 934 never executed
+call   935 never executed
+branch 936 never executed (fallthrough)
+branch 937 never executed
+call   938 never executed
+branch 939 never executed (fallthrough)
+branch 940 never executed
+call   941 never executed
+branch 942 never executed (fallthrough)
+branch 943 never executed
+call   944 never executed
+branch 945 never executed (fallthrough)
+branch 946 never executed
+call   947 never executed
+branch 948 never executed (fallthrough)
+branch 949 never executed
+call   950 never executed
+branch 951 never executed (fallthrough)
+branch 952 never executed
+call   953 never executed
+branch 954 never executed (fallthrough)
+branch 955 never executed
+call   956 never executed
+branch 957 never executed (fallthrough)
+branch 958 never executed
+call   959 never executed
+branch 960 never executed (fallthrough)
+branch 961 never executed
+call   962 never executed
+branch 963 never executed (fallthrough)
+branch 964 never executed
+call   965 never executed
+branch 966 never executed (fallthrough)
+branch 967 never executed
+call   968 never executed
+branch 969 never executed (fallthrough)
+branch 970 never executed
+call   971 never executed
+branch 972 never executed (fallthrough)
+branch 973 never executed
+call   974 never executed
+branch 975 never executed (fallthrough)
+branch 976 never executed
+call   977 never executed
+branch 978 never executed (fallthrough)
+branch 979 never executed
+call   980 never executed
+branch 981 never executed (fallthrough)
+branch 982 never executed
+call   983 never executed
+branch 984 never executed (fallthrough)
+branch 985 never executed
+call   986 never executed
+branch 987 never executed (fallthrough)
+branch 988 never executed
+call   989 never executed
+branch 990 never executed (fallthrough)
+branch 991 never executed
+call   992 never executed
+branch 993 never executed (fallthrough)
+branch 994 never executed
+call   995 never executed
+branch 996 never executed (fallthrough)
+branch 997 never executed
+call   998 never executed
+branch 999 never executed (fallthrough)
+branch 1000 never executed
+call   1001 never executed
+branch 1002 never executed (fallthrough)
+branch 1003 never executed
+call   1004 never executed
+branch 1005 never executed (fallthrough)
+branch 1006 never executed
+call   1007 never executed
+branch 1008 never executed (fallthrough)
+branch 1009 never executed
+call   1010 never executed
+branch 1011 never executed (fallthrough)
+branch 1012 never executed
+call   1013 never executed
+branch 1014 never executed (fallthrough)
+branch 1015 never executed
+call   1016 never executed
+branch 1017 never executed (fallthrough)
+branch 1018 never executed
+call   1019 never executed
+branch 1020 never executed (fallthrough)
+branch 1021 never executed
+call   1022 never executed
+branch 1023 never executed (fallthrough)
+branch 1024 never executed
+call   1025 never executed
+branch 1026 never executed (fallthrough)
+branch 1027 never executed
+call   1028 never executed
+branch 1029 never executed (fallthrough)
+branch 1030 never executed
+call   1031 never executed
+branch 1032 never executed (fallthrough)
+branch 1033 never executed
+call   1034 never executed
+branch 1035 never executed (fallthrough)
+branch 1036 never executed
+call   1037 never executed
+branch 1038 never executed (fallthrough)
+branch 1039 never executed
+call   1040 never executed
+branch 1041 never executed (fallthrough)
+branch 1042 never executed
+call   1043 never executed
+branch 1044 never executed (fallthrough)
+branch 1045 never executed
+call   1046 never executed
+branch 1047 never executed (fallthrough)
+branch 1048 never executed
+call   1049 never executed
+branch 1050 never executed (fallthrough)
+branch 1051 never executed
+call   1052 never executed
+branch 1053 never executed (fallthrough)
+branch 1054 never executed
+call   1055 never executed
+branch 1056 never executed (fallthrough)
+branch 1057 never executed
+call   1058 never executed
+branch 1059 never executed (fallthrough)
+branch 1060 never executed
+call   1061 never executed
+branch 1062 never executed (fallthrough)
+branch 1063 never executed
+call   1064 never executed
+branch 1065 never executed (fallthrough)
+branch 1066 never executed
+call   1067 never executed
+branch 1068 never executed (fallthrough)
+branch 1069 never executed
+call   1070 never executed
+branch 1071 never executed (fallthrough)
+branch 1072 never executed
+call   1073 never executed
+branch 1074 never executed (fallthrough)
+branch 1075 never executed
+call   1076 never executed
+branch 1077 never executed (fallthrough)
+branch 1078 never executed
+call   1079 never executed
+branch 1080 never executed (fallthrough)
+branch 1081 never executed
+call   1082 never executed
+branch 1083 never executed (fallthrough)
+branch 1084 never executed
+call   1085 never executed
+branch 1086 never executed (fallthrough)
+branch 1087 never executed
+call   1088 never executed
+branch 1089 never executed (fallthrough)
+branch 1090 never executed
+call   1091 never executed
+branch 1092 never executed (fallthrough)
+branch 1093 never executed
+call   1094 never executed
+branch 1095 never executed (fallthrough)
+branch 1096 never executed
+call   1097 never executed
+branch 1098 never executed (fallthrough)
+branch 1099 never executed
+call   1100 never executed
+branch 1101 never executed (fallthrough)
+branch 1102 never executed
+call   1103 never executed
+branch 1104 never executed (fallthrough)
+branch 1105 never executed
+call   1106 never executed
+branch 1107 never executed (fallthrough)
+branch 1108 never executed
+call   1109 never executed
+branch 1110 never executed (fallthrough)
+branch 1111 never executed
+call   1112 never executed
+branch 1113 never executed (fallthrough)
+branch 1114 never executed
+call   1115 never executed
+branch 1116 never executed (fallthrough)
+branch 1117 never executed
+call   1118 never executed
+branch 1119 never executed (fallthrough)
+branch 1120 never executed
+call   1121 never executed
+branch 1122 never executed (fallthrough)
+branch 1123 never executed
+call   1124 never executed
+branch 1125 never executed (fallthrough)
+branch 1126 never executed
+call   1127 never executed
+branch 1128 never executed (fallthrough)
+branch 1129 never executed
+call   1130 never executed
+branch 1131 never executed (fallthrough)
+branch 1132 never executed
+call   1133 never executed
+branch 1134 never executed (fallthrough)
+branch 1135 never executed
+call   1136 never executed
+branch 1137 never executed (fallthrough)
+branch 1138 never executed
+call   1139 never executed
+branch 1140 never executed (fallthrough)
+branch 1141 never executed
+call   1142 never executed
+branch 1143 never executed (fallthrough)
+branch 1144 never executed
+call   1145 never executed
+branch 1146 never executed (fallthrough)
+branch 1147 never executed
+call   1148 never executed
+branch 1149 never executed (fallthrough)
+branch 1150 never executed
+call   1151 never executed
+branch 1152 never executed (fallthrough)
+branch 1153 never executed
+call   1154 never executed
+branch 1155 never executed (fallthrough)
+branch 1156 never executed
+call   1157 never executed
+branch 1158 never executed (fallthrough)
+branch 1159 never executed
+call   1160 never executed
+branch 1161 never executed (fallthrough)
+branch 1162 never executed
+call   1163 never executed
+branch 1164 never executed (fallthrough)
+branch 1165 never executed
+call   1166 never executed
+branch 1167 never executed (fallthrough)
+branch 1168 never executed
+call   1169 never executed
+branch 1170 never executed (fallthrough)
+branch 1171 never executed
+call   1172 never executed
+branch 1173 never executed (fallthrough)
+branch 1174 never executed
+call   1175 never executed
+branch 1176 never executed (fallthrough)
+branch 1177 never executed
+call   1178 never executed
+branch 1179 never executed (fallthrough)
+branch 1180 never executed
+call   1181 never executed
+branch 1182 never executed (fallthrough)
+branch 1183 never executed
+call   1184 never executed
+branch 1185 never executed (fallthrough)
+branch 1186 never executed
+call   1187 never executed
+branch 1188 never executed (fallthrough)
+branch 1189 never executed
+call   1190 never executed
+branch 1191 never executed (fallthrough)
+branch 1192 never executed
+call   1193 never executed
+branch 1194 never executed (fallthrough)
+branch 1195 never executed
+call   1196 never executed
+branch 1197 never executed (fallthrough)
+branch 1198 never executed
+call   1199 never executed
+branch 1200 never executed (fallthrough)
+branch 1201 never executed
+call   1202 never executed
+branch 1203 never executed (fallthrough)
+branch 1204 never executed
+call   1205 never executed
+branch 1206 never executed (fallthrough)
+branch 1207 never executed
+call   1208 never executed
+branch 1209 never executed (fallthrough)
+branch 1210 never executed
+call   1211 never executed
+branch 1212 never executed (fallthrough)
+branch 1213 never executed
+call   1214 never executed
+branch 1215 never executed (fallthrough)
+branch 1216 never executed
+call   1217 never executed
+branch 1218 never executed (fallthrough)
+branch 1219 never executed
+call   1220 never executed
+branch 1221 never executed (fallthrough)
+branch 1222 never executed
+call   1223 never executed
+branch 1224 never executed (fallthrough)
+branch 1225 never executed
+call   1226 never executed
+branch 1227 never executed (fallthrough)
+branch 1228 never executed
+call   1229 never executed
+branch 1230 never executed (fallthrough)
+branch 1231 never executed
+branch 1232 never executed (fallthrough)
+branch 1233 never executed
+call   1234 never executed
+        -:  163:
+function _Z10saveTrainsRKSt6vectorI5TrainSaIS0_EE called 48 returned 100% blocks executed 91%
+       48:  164:bool saveTrains(const vector<Train>& trains) {
+       48:  165:    ofstream out(TRAIN_FILE, ios::trunc);
+call    0 returned 48
+branch  1 taken 48 (fallthrough)
+branch  2 taken 0 (throw)
+      48*:  166:    if (!out) return false;
+call    0 returned 48
+branch  1 taken 48 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 0 (fallthrough)
+branch  4 taken 48
+     2022:  167:    for (const auto& x : trains) {
+call    0 returned 48
+call    1 returned 48
+call    2 returned 1974
+call    3 returned 1974
+call    4 returned 2022
+branch  5 taken 1974
+branch  6 taken 48 (fallthrough)
+     5922:  168:        out << x.number << '|' << x.name << '|' << x.source << '|'
+     1974:  169:            << x.destination << '|' << x.departure << '|' << x.arrival << '|'
+call    0 returned 1974
+branch  1 taken 1974 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 1974
+branch  4 taken 1974 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 1974
+branch  7 taken 1974 (fallthrough)
+branch  8 taken 0 (throw)
+call    9 returned 1974
+branch 10 taken 1974 (fallthrough)
+branch 11 taken 0 (throw)
+call   12 returned 1974
+branch 13 taken 1974 (fallthrough)
+branch 14 taken 0 (throw)
+call   15 returned 1974
+branch 16 taken 1974 (fallthrough)
+branch 17 taken 0 (throw)
+call   18 returned 1974
+branch 19 taken 1974 (fallthrough)
+branch 20 taken 0 (throw)
+call   21 returned 1974
+branch 22 taken 1974 (fallthrough)
+branch 23 taken 0 (throw)
+call   24 returned 1974
+branch 25 taken 1974 (fallthrough)
+branch 26 taken 0 (throw)
+call   27 returned 1974
+branch 28 taken 1974 (fallthrough)
+branch 29 taken 0 (throw)
+call   30 returned 1974
+branch 31 taken 1974 (fallthrough)
+branch 32 taken 0 (throw)
+call   33 returned 1974
+branch 34 taken 1974 (fallthrough)
+branch 35 taken 0 (throw)
+     1974:  170:            << x.sleeperTotal << '|' << x.acTotal << '|' << x.generalTotal << '|'
+call    0 returned 1974
+branch  1 taken 1974 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 1974
+branch  4 taken 1974 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 1974
+branch  7 taken 1974 (fallthrough)
+branch  8 taken 0 (throw)
+call    9 returned 1974
+branch 10 taken 1974 (fallthrough)
+branch 11 taken 0 (throw)
+call   12 returned 1974
+branch 13 taken 1974 (fallthrough)
+branch 14 taken 0 (throw)
+call   15 returned 1974
+branch 16 taken 1974 (fallthrough)
+branch 17 taken 0 (throw)
+     1974:  171:            << x.sleeperFare << '|' << x.acFare << '|' << x.generalFare << "|v1\n";
+call    0 returned 1974
+branch  1 taken 1974 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 1974
+branch  4 taken 1974 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 1974
+branch  7 taken 1974 (fallthrough)
+branch  8 taken 0 (throw)
+call    9 returned 1974
+branch 10 taken 1974 (fallthrough)
+branch 11 taken 0 (throw)
+call   12 returned 1974
+branch 13 taken 1974 (fallthrough)
+branch 14 taken 0 (throw)
+call   15 returned 1974
+branch 16 taken 1974 (fallthrough)
+branch 17 taken 0 (throw)
+        -:  172:    }
+       48:  173:    return static_cast<bool>(out);
+call    0 returned 48
+branch  1 taken 48 (fallthrough)
+branch  2 taken 0 (throw)
+       48:  174:}
+call    0 returned 48
+call    1 never executed
+        -:  175:
+function _Z10loadTrainsv called 40 returned 100% blocks executed 72%
+       40:  176:vector<Train> loadTrains() {
+       40:  177:    vector<Train> trains;
+call    0 returned 40
+       40:  178:    ifstream in(TRAIN_FILE);
+call    0 returned 40
+branch  1 taken 40 (fallthrough)
+branch  2 taken 0 (throw)
+       40:  179:    string line;
+call    0 returned 40
+     1680:  180:    while (getline(in, line)) {
+call    0 returned 1680
+branch  1 taken 1680 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 1680
+branch  4 taken 1680 (fallthrough)
+branch  5 taken 0 (throw)
+branch  6 taken 1640
+branch  7 taken 40 (fallthrough)
+     1640:  181:        stringstream ss(line);
+call    0 returned 1640
+call    1 returned 1640
+branch  2 taken 1640 (fallthrough)
+branch  3 taken 0 (throw)
+     1640:  182:        string field;
+call    0 returned 1640
+     1640:  183:        vector<string> f;
+call    0 returned 1640
+    22960:  184:        while (getline(ss, field, '|')) f.push_back(field);
+call    0 returned 21320
+branch  1 taken 21320 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 22960
+branch  4 taken 22960 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 22960
+branch  7 taken 22960 (fallthrough)
+branch  8 taken 0 (throw)
+branch  9 taken 21320
+branch 10 taken 1640 (fallthrough)
+    1640*:  185:        if (f.size() != 13) continue;
+call    0 returned 1640
+branch  1 taken 0 (fallthrough)
+branch  2 taken 1640
+        -:  186:        try {
+     1640:  187:            Train t;
+call    0 returned 1640
+     1640:  188:            t.number = stoi(f[0]); t.name = f[1]; t.source = f[2];
+call    0 returned 1640
+call    1 returned 1640
+branch  2 taken 1640 (fallthrough)
+branch  3 taken 0 (throw)
+call    4 returned 1640
+call    5 returned 1640
+branch  6 taken 1640 (fallthrough)
+branch  7 taken 0 (throw)
+call    8 returned 1640
+call    9 returned 1640
+branch 10 taken 1640 (fallthrough)
+branch 11 taken 0 (throw)
+     1640:  189:            t.destination = f[3]; t.departure = f[4]; t.arrival = f[5];
+call    0 returned 1640
+call    1 returned 1640
+branch  2 taken 1640 (fallthrough)
+branch  3 taken 0 (throw)
+call    4 returned 1640
+call    5 returned 1640
+branch  6 taken 1640 (fallthrough)
+branch  7 taken 0 (throw)
+call    8 returned 1640
+call    9 returned 1640
+branch 10 taken 1640 (fallthrough)
+branch 11 taken 0 (throw)
+     1640:  190:            t.sleeperTotal = stoi(f[6]); t.acTotal = stoi(f[7]);
+call    0 returned 1640
+call    1 returned 1640
+branch  2 taken 1640 (fallthrough)
+branch  3 taken 0 (throw)
+call    4 returned 1640
+call    5 returned 1640
+branch  6 taken 1640 (fallthrough)
+branch  7 taken 0 (throw)
+     1640:  191:            t.generalTotal = stoi(f[8]); t.sleeperFare = stod(f[9]);
+call    0 returned 1640
+call    1 returned 1640
+branch  2 taken 1640 (fallthrough)
+branch  3 taken 0 (throw)
+call    4 returned 1640
+call    5 returned 1640
+branch  6 taken 1640 (fallthrough)
+branch  7 taken 0 (throw)
+     1640:  192:            t.acFare = stod(f[10]); t.generalFare = stod(f[11]);
+call    0 returned 1640
+call    1 returned 1640
+branch  2 taken 1640 (fallthrough)
+branch  3 taken 0 (throw)
+call    4 returned 1640
+call    5 returned 1640
+branch  6 taken 1640 (fallthrough)
+branch  7 taken 0 (throw)
+     1640:  193:            trains.push_back(t);
+call    0 returned 1640
+branch  1 taken 1640 (fallthrough)
+branch  2 taken 0 (throw)
+     1640:  194:        } catch (...) { /* ignore malformed seed/data rows */ }
+call    0 returned 1640
+call    1 never executed
+call    2 never executed
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+     1640:  195:    }
+call    0 returned 1640
+branch  1 taken 1640 (fallthrough)
+branch  2 taken 0
+call    3 returned 1640
+branch  4 taken 1640 (fallthrough)
+branch  5 taken 0
+call    6 returned 1640
+branch  7 taken 1640 (fallthrough)
+branch  8 taken 0
+call    9 never executed
+call   10 never executed
+call   11 never executed
+       40:  196:    in.close();
+call    0 returned 40
+branch  1 taken 40 (fallthrough)
+branch  2 taken 0 (throw)
+        -:  197:
+        -:  198:    // Add any newly shipped demo routes to an existing data file without
+        -:  199:    // deleting routes already present. This upgrades older Sprint 1 installs.
+       40:  200:    vector<Train> seeds = demoTrains();
+call    0 returned 40
+branch  1 taken 40 (fallthrough)
+branch  2 taken 0 (throw)
+     1680:  201:    for (const auto& seed : seeds) {
+call    0 returned 40
+call    1 returned 40
+call    2 returned 1640
+call    3 returned 1640
+call    4 returned 1680
+branch  5 taken 1640
+branch  6 taken 40 (fallthrough)
+function _ZZ10loadTrainsvENKUlRK5TrainE_clES1_ called 34440 returned 100% blocks executed 100%
+     1640:  202:        bool exists = any_of(trains.begin(), trains.end(), [&](const Train& t) {
+call    0 returned 1640
+call    1 returned 1640
+call    2 returned 1640
+branch  3 taken 1640 (fallthrough)
+branch  4 taken 0 (throw)
+    34440:  203:            return t.number == seed.number;
+        -:  204:        });
+    1640*:  205:        if (!exists) trains.push_back(seed);
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1640
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+        -:  206:    }
+       40:  207:    if (!saveTrains(trains))
+call    0 returned 40
+branch  1 taken 40 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 0 (fallthrough)
+branch  4 taken 40
+    #####:  208:        cerr << "Warning: could not write " << TRAIN_FILE << "; using loaded train data.\n";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+       80:  209:    return trains;
+       40:  210:}
+call    0 returned 40
+call    1 returned 40
+call    2 returned 40
+call    3 never executed
+call    4 never executed
+call    5 never executed
+call    6 never executed
+        -:  211:
+function _Z12loadBookingsv called 40 returned 100% blocks executed 74%
+       40:  212:vector<Booking> loadBookings() {
+       40:  213:    vector<Booking> bookings;
+call    0 returned 40
+       40:  214:    ifstream in(BOOKING_FILE);
+call    0 returned 40
+branch  1 taken 40 (fallthrough)
+branch  2 taken 0 (throw)
+       40:  215:    string line;
+call    0 returned 40
+       65:  216:    while (getline(in, line)) {
+call    0 returned 65
+branch  1 taken 65 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 65
+branch  4 taken 65 (fallthrough)
+branch  5 taken 0 (throw)
+branch  6 taken 25
+branch  7 taken 40 (fallthrough)
+       25:  217:        stringstream ss(line); vector<string> f; string field;
+call    0 returned 25
+call    1 returned 25
+branch  2 taken 25 (fallthrough)
+branch  3 taken 0 (throw)
+call    4 returned 25
+call    5 returned 25
+      325:  218:        while (getline(ss, field, '|')) f.push_back(field);
+call    0 returned 300
+branch  1 taken 300 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 325
+branch  4 taken 325 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 325
+branch  7 taken 325 (fallthrough)
+branch  8 taken 0 (throw)
+branch  9 taken 300
+branch 10 taken 25 (fallthrough)
+      25*:  219:        if (f.size() < 9) continue;
+call    0 returned 25
+branch  1 taken 0 (fallthrough)
+branch  2 taken 25
+        -:  220:        try {
+       25:  221:            Booking b;
+call    0 returned 25
+       25:  222:            b.pnr=stoll(f[0]); b.passenger=f[1]; b.trainNumber=stoi(f[2]);
+call    0 returned 25
+call    1 returned 25
+branch  2 taken 25 (fallthrough)
+branch  3 taken 0 (throw)
+call    4 returned 25
+call    5 returned 25
+branch  6 taken 25 (fallthrough)
+branch  7 taken 0 (throw)
+call    8 returned 25
+call    9 returned 25
+branch 10 taken 25 (fallthrough)
+branch 11 taken 0 (throw)
+       25:  223:            b.trainDate=f[3]; b.className=f[4]; b.seats=stoi(f[5]); b.berth=f[6];
+call    0 returned 25
+call    1 returned 25
+branch  2 taken 25 (fallthrough)
+branch  3 taken 0 (throw)
+call    4 returned 25
+call    5 returned 25
+branch  6 taken 25 (fallthrough)
+branch  7 taken 0 (throw)
+call    8 returned 25
+call    9 returned 25
+branch 10 taken 25 (fallthrough)
+branch 11 taken 0 (throw)
+call   12 returned 25
+call   13 returned 25
+branch 14 taken 25 (fallthrough)
+branch 15 taken 0 (throw)
+       25:  224:            b.paymentMode=f[7]; b.fare=stod(f[8]); b.status="CONFIRMED"; b.refund=0.0;
+call    0 returned 25
+call    1 returned 25
+branch  2 taken 25 (fallthrough)
+branch  3 taken 0 (throw)
+call    4 returned 25
+call    5 returned 25
+branch  6 taken 25 (fallthrough)
+branch  7 taken 0 (throw)
+call    8 returned 25
+branch  9 taken 25 (fallthrough)
+branch 10 taken 0 (throw)
+       25:  225:            if (f.size() >= 11) { b.status=f[9]; b.refund=stod(f[10]); }
+call    0 returned 25
+branch  1 taken 25 (fallthrough)
+branch  2 taken 0
+call    3 returned 25
+call    4 returned 25
+branch  5 taken 25 (fallthrough)
+branch  6 taken 0 (throw)
+call    7 returned 25
+call    8 returned 25
+branch  9 taken 25 (fallthrough)
+branch 10 taken 0 (throw)
+      25*:  226:            if (f.size() >= 12) b.ownerContact=f[11]; else b.ownerContact="";
+call    0 returned 25
+branch  1 taken 25 (fallthrough)
+branch  2 taken 0
+call    3 returned 25
+call    4 returned 25
+branch  5 taken 25 (fallthrough)
+branch  6 taken 0 (throw)
+call    7 never executed
+branch  8 never executed (fallthrough)
+branch  9 never executed (throw)
+       25:  227:            bookings.push_back(b);
+call    0 returned 25
+branch  1 taken 25 (fallthrough)
+branch  2 taken 0 (throw)
+       25:  228:        } catch (...) {}
+call    0 returned 25
+call    1 never executed
+call    2 never executed
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+       25:  229:    }
+call    0 returned 25
+branch  1 taken 25 (fallthrough)
+branch  2 taken 0
+call    3 returned 25
+branch  4 taken 25 (fallthrough)
+branch  5 taken 0
+call    6 returned 25
+branch  7 taken 25 (fallthrough)
+branch  8 taken 0
+call    9 never executed
+call   10 never executed
+call   11 never executed
+       80:  230:    return bookings;
+       40:  231:}
+call    0 returned 40
+call    1 returned 40
+call    2 never executed
+call    3 never executed
+call    4 never executed
+        -:  232:
+function _Z12saveBookingsRKSt6vectorI7BookingSaIS0_EE called 6 returned 100% blocks executed 87%
+        6:  233:bool saveBookings(const vector<Booking>& bookings) {
+        6:  234:    const string temp = BOOKING_FILE + ".tmp";
+call    0 returned 6
+branch  1 taken 6 (fallthrough)
+branch  2 taken 0 (throw)
+        6:  235:    ofstream out(temp, ios::trunc);
+call    0 returned 6
+branch  1 taken 6 (fallthrough)
+branch  2 taken 0 (throw)
+       6*:  236:    if (!out) return false;
+call    0 returned 6
+branch  1 taken 6 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 0 (fallthrough)
+branch  4 taken 6
+       15:  237:    for (const auto& b : bookings) {
+call    0 returned 6
+call    1 returned 6
+call    2 returned 9
+call    3 returned 9
+call    4 returned 15
+branch  5 taken 9
+branch  6 taken 6 (fallthrough)
+        9:  238:        out << b.pnr << '|' << b.passenger << '|' << b.trainNumber << '|'
+call    0 returned 9
+branch  1 taken 9 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 9
+branch  4 taken 9 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 9
+branch  7 taken 9 (fallthrough)
+branch  8 taken 0 (throw)
+call    9 returned 9
+branch 10 taken 9 (fallthrough)
+branch 11 taken 0 (throw)
+        9:  239:            << b.trainDate << '|' << b.className << '|' << b.seats << '|'
+call    0 returned 9
+branch  1 taken 9 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 9
+branch  4 taken 9 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 9
+branch  7 taken 9 (fallthrough)
+branch  8 taken 0 (throw)
+call    9 returned 9
+branch 10 taken 9 (fallthrough)
+branch 11 taken 0 (throw)
+call   12 returned 9
+branch 13 taken 9 (fallthrough)
+branch 14 taken 0 (throw)
+call   15 returned 9
+branch 16 taken 9 (fallthrough)
+branch 17 taken 0 (throw)
+        9:  240:            << b.berth << '|' << b.paymentMode << '|' << fixed << setprecision(2)
+call    0 returned 9
+branch  1 taken 9 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 9
+branch  4 taken 9 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 9
+branch  7 taken 9 (fallthrough)
+branch  8 taken 0 (throw)
+call    9 returned 9
+branch 10 taken 9 (fallthrough)
+branch 11 taken 0 (throw)
+call   12 returned 9
+branch 13 taken 9 (fallthrough)
+branch 14 taken 0 (throw)
+call   15 returned 9
+branch 16 taken 9 (fallthrough)
+branch 17 taken 0 (throw)
+call   18 returned 9
+branch 19 taken 9 (fallthrough)
+branch 20 taken 0 (throw)
+call   21 returned 9
+call   22 returned 9
+        9:  241:            << b.fare << '|' << b.status << '|' << fixed << setprecision(2) << b.refund << '|' << b.ownerContact << '\n';
+call    0 returned 9
+branch  1 taken 9 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 9
+branch  4 taken 9 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 9
+branch  7 taken 9 (fallthrough)
+branch  8 taken 0 (throw)
+call    9 returned 9
+branch 10 taken 9 (fallthrough)
+branch 11 taken 0 (throw)
+call   12 returned 9
+branch 13 taken 9 (fallthrough)
+branch 14 taken 0 (throw)
+call   15 returned 9
+call   16 returned 9
+call   17 returned 9
+branch 18 taken 9 (fallthrough)
+branch 19 taken 0 (throw)
+call   20 returned 9
+branch 21 taken 9 (fallthrough)
+branch 22 taken 0 (throw)
+call   23 returned 9
+branch 24 taken 9 (fallthrough)
+branch 25 taken 0 (throw)
+call   26 returned 9
+branch 27 taken 9 (fallthrough)
+branch 28 taken 0 (throw)
+        -:  242:    }
+        6:  243:    out.close();
+call    0 returned 6
+branch  1 taken 6 (fallthrough)
+branch  2 taken 0 (throw)
+       6*:  244:    if (!out) return false;
+call    0 returned 6
+branch  1 taken 6 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 0 (fallthrough)
+branch  4 taken 6
+        -:  245:    // Portable fallback: replace destination after successful temp write.
+        6:  246:    remove(BOOKING_FILE.c_str());
+call    0 returned 6
+call    1 returned 6
+        6:  247:    if (rename(temp.c_str(), BOOKING_FILE.c_str()) != 0) {
+call    0 returned 6
+call    1 returned 6
+call    2 returned 6
+branch  3 taken 0 (fallthrough)
+branch  4 taken 6
+        -:  248:        // If rename failed, keep the temporary file for recovery and report failure.
+    #####:  249:        return false;
+        -:  250:    }
+        6:  251:    return true;
+        6:  252:}
+call    0 returned 6
+call    1 returned 6
+call    2 never executed
+call    3 never executed
+        -:  253:
+function _Z11bookedSeatsRKSt6vectorI7BookingSaIS0_EEiRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESC_ called 122 returned 100% blocks executed 70%
+      122:  254:int bookedSeats(const vector<Booking>& bookings, int trainNo,
+        -:  255:                const string& date, const string& className) {
+      122:  256:    int total = 0;
+      194:  257:    for (const auto& b : bookings)
+call    0 returned 122
+call    1 returned 122
+call    2 returned 72
+call    3 returned 72
+call    4 returned 194
+branch  5 taken 72
+branch  6 taken 122 (fallthrough)
+      21*:  258:        if (b.trainNumber == trainNo && b.trainDate == date &&
+call    0 returned 21
+branch  1 taken 0 (fallthrough)
+branch  2 taken 21
+branch  3 never executed (fallthrough)
+branch  4 never executed
+      93*:  259:            b.className == className && b.status == "CONFIRMED")
+branch  0 taken 21 (fallthrough)
+branch  1 taken 51
+call    2 never executed
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+branch  6 never executed (fallthrough)
+branch  7 never executed
+branch  8 taken 0 (fallthrough)
+branch  9 taken 72
+    #####:  260:            total += b.seats;
+      122:  261:    return total;
+        -:  262:}
+        -:  263:
+function _Z13totalForClassRK5TrainRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE called 120 returned 100% blocks executed 100%
+      120:  264:int totalForClass(const Train& t, const string& c) {
+      120:  265:    if (c == "Sleeper") return t.sleeperTotal;
+call    0 returned 120
+branch  1 taken 42 (fallthrough)
+branch  2 taken 78
+       78:  266:    if (c == "AC") return t.acTotal;
+call    0 returned 78
+branch  1 taken 34 (fallthrough)
+branch  2 taken 44
+       44:  267:    return t.generalTotal;
+        -:  268:}
+        -:  269:
+function _Z12fareForClassRK5TrainRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE called 90 returned 100% blocks executed 100%
+       90:  270:double fareForClass(const Train& t, const string& c) {
+       90:  271:    if (c == "Sleeper") return t.sleeperFare;
+call    0 returned 90
+branch  1 taken 28 (fallthrough)
+branch  2 taken 62
+       62:  272:    if (c == "AC") return t.acFare;
+call    0 returned 62
+branch  1 taken 28 (fallthrough)
+branch  2 taken 34
+       34:  273:    return t.generalFare;
+        -:  274:}
+        -:  275:
+function _Z12searchTrainsRKSt6vectorI5TrainSaIS0_EERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESC_ called 12 returned 100% blocks executed 55%
+       12:  276:vector<const Train*> searchTrains(const vector<Train>& trains,
+        -:  277:                                  const string& source, const string& destination) {
+       12:  278:    vector<const Train*> found;
+call    0 returned 12
+      504:  279:    for (const auto& t : trains)
+call    0 returned 12
+call    1 returned 12
+call    2 returned 492
+call    3 returned 492
+call    4 returned 504
+branch  5 taken 492
+branch  6 taken 12 (fallthrough)
+     1104:  280:        if (lowerCopy(t.source) == lowerCopy(source) &&
+call    0 returned 492
+branch  1 taken 492 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 492
+branch  4 taken 492 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 492
+branch  7 taken 492 (fallthrough)
+branch  8 taken 0 (throw)
+call    9 returned 492
+branch 10 taken 492 (fallthrough)
+branch 11 taken 0 (throw)
+call   12 returned 492
+branch 13 taken 120 (fallthrough)
+branch 14 taken 372
+branch 15 taken 28 (fallthrough)
+branch 16 taken 92
+call   17 returned 492
+branch 18 taken 492 (fallthrough)
+branch 19 taken 0
+call   20 returned 492
+branch 21 taken 492 (fallthrough)
+branch 22 taken 0
+call   23 returned 492
+branch 24 taken 492 (fallthrough)
+branch 25 taken 0
+call   26 returned 492
+branch 27 taken 28 (fallthrough)
+branch 28 taken 464
+branch 29 never executed (fallthrough)
+branch 30 never executed
+call   31 never executed
+branch 32 never executed (fallthrough)
+branch 33 never executed
+call   34 never executed
+branch 35 never executed (fallthrough)
+branch 36 never executed
+call   37 never executed
+branch 38 never executed (fallthrough)
+branch 39 never executed
+call   40 never executed
+      612:  281:            lowerCopy(t.destination) == lowerCopy(destination))
+call    0 returned 120
+branch  1 taken 120 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 120
+branch  4 taken 120 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 120
+branch  7 taken 120 (fallthrough)
+branch  8 taken 0 (throw)
+call    9 returned 120
+branch 10 taken 120 (fallthrough)
+branch 11 taken 0 (throw)
+call   12 returned 120
+branch 13 taken 120 (fallthrough)
+branch 14 taken 372
+call   15 returned 120
+branch 16 taken 120 (fallthrough)
+branch 17 taken 372
+call   18 returned 120
+branch 19 taken 120 (fallthrough)
+branch 20 taken 372
+call   21 returned 120
+branch 22 taken 120 (fallthrough)
+branch 23 taken 372
+call   24 returned 120
+branch 25 taken 492 (fallthrough)
+branch 26 taken 0
+branch 27 never executed (fallthrough)
+branch 28 never executed
+call   29 never executed
+branch 30 never executed (fallthrough)
+branch 31 never executed
+call   32 never executed
+branch 33 never executed (fallthrough)
+branch 34 never executed
+call   35 never executed
+branch 36 never executed (fallthrough)
+branch 37 never executed
+call   38 never executed
+       28:  282:            found.push_back(&t);
+call    0 returned 28
+branch  1 taken 28 (fallthrough)
+branch  2 taken 0 (throw)
+       12:  283:    return found;
+    =====:  284:}
+call    0 never executed
+        -:  285:
+function _Z19displayAvailabilityRK5TrainRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEERKSt6vectorI7BookingSaISB_EE called 28 returned 100% blocks executed 88%
+       28:  286:void displayAvailability(const Train& t, const string& date,
+        -:  287:                         const vector<Booking>& bookings) {
+       28:  288:    cout << "\nTrain " << t.number << " - " << t.name << "\n"
+call    0 returned 28
+branch  1 taken 28 (fallthrough)
+branch  2 taken 0 (throw)
+       56:  289:         << "Route: " << t.source << " -> " << t.destination
+       56:  290:         << " | " << t.departure << " - " << t.arrival << "\n"
+       28:  291:         << "Journey date: " << date << "\n"
+call    0 returned 28
+branch  1 taken 28 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 28
+branch  4 taken 28 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 28
+branch  7 taken 28 (fallthrough)
+branch  8 taken 0 (throw)
+call    9 returned 28
+branch 10 taken 28 (fallthrough)
+branch 11 taken 0 (throw)
+call   12 returned 28
+branch 13 taken 28 (fallthrough)
+branch 14 taken 0 (throw)
+call   15 returned 28
+branch 16 taken 28 (fallthrough)
+branch 17 taken 0 (throw)
+call   18 returned 28
+branch 19 taken 28 (fallthrough)
+branch 20 taken 0 (throw)
+call   21 returned 28
+branch 22 taken 28 (fallthrough)
+branch 23 taken 0 (throw)
+call   24 returned 28
+branch 25 taken 28 (fallthrough)
+branch 26 taken 0 (throw)
+call   27 returned 28
+branch 28 taken 28 (fallthrough)
+branch 29 taken 0 (throw)
+call   30 returned 28
+branch 31 taken 28 (fallthrough)
+branch 32 taken 0 (throw)
+call   33 returned 28
+branch 34 taken 28 (fallthrough)
+branch 35 taken 0 (throw)
+call   36 returned 28
+branch 37 taken 28 (fallthrough)
+branch 38 taken 0 (throw)
+call   39 returned 28
+branch 40 taken 28 (fallthrough)
+branch 41 taken 0 (throw)
+call   42 returned 28
+branch 43 taken 28 (fallthrough)
+branch 44 taken 0 (throw)
+call   45 returned 28
+branch 46 taken 28 (fallthrough)
+branch 47 taken 0 (throw)
+       28:  292:         << left << setw(12) << "Class" << right << setw(12) << "Available"
+call    0 returned 28
+branch  1 taken 28 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 28
+call    4 returned 28
+call    5 returned 28
+branch  6 taken 28 (fallthrough)
+branch  7 taken 0 (throw)
+call    8 returned 28
+branch  9 taken 28 (fallthrough)
+branch 10 taken 0 (throw)
+       28:  293:         << setw(14) << "Fare/seat\n";
+call    0 returned 28
+call    1 returned 28
+call    2 returned 28
+branch  3 taken 28 (fallthrough)
+branch  4 taken 0 (throw)
+call    5 returned 28
+call    6 returned 28
+call    7 returned 28
+branch  8 taken 28 (fallthrough)
+branch  9 taken 0 (throw)
+       56:  294:    const vector<string> classes = {"Sleeper", "AC", "General"};
+call    0 returned 28
+branch  1 taken 28 (fallthrough)
+branch  2 taken 0 (throw)
+      112:  295:    for (const auto& c : classes) {
+call    0 returned 28
+call    1 returned 28
+call    2 returned 84
+call    3 returned 84
+call    4 returned 112
+branch  5 taken 84
+branch  6 taken 28 (fallthrough)
+       84:  296:        int total = totalForClass(t, c);
+call    0 returned 84
+branch  1 taken 84 (fallthrough)
+branch  2 taken 0 (throw)
+       84:  297:        int available = max(0, total - bookedSeats(bookings, t.number, date, c));
+call    0 returned 84
+branch  1 taken 84 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 84
+       84:  298:        cout << left << setw(12) << c << right << setw(12) << available
+call    0 returned 84
+branch  1 taken 84 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 84
+call    4 returned 84
+call    5 returned 84
+branch  6 taken 84 (fallthrough)
+branch  7 taken 0 (throw)
+call    8 returned 84
+branch  9 taken 84 (fallthrough)
+branch 10 taken 0 (throw)
+call   11 returned 84
+call   12 returned 84
+       84:  299:             << setw(14) << fixed << setprecision(2) << fareForClass(t, c) << "\n";
+call    0 returned 84
+branch  1 taken 84 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 84
+call    4 returned 84
+call    5 returned 84
+branch  6 taken 84 (fallthrough)
+branch  7 taken 0 (throw)
+call    8 returned 84
+call    9 returned 84
+call   10 returned 84
+branch 11 taken 84 (fallthrough)
+branch 12 taken 0 (throw)
+call   13 returned 84
+branch 14 taken 84 (fallthrough)
+branch 15 taken 0 (throw)
+call   16 returned 84
+branch 17 taken 84 (fallthrough)
+branch 18 taken 0 (throw)
+        -:  300:    }
+       28:  301:}
+call    0 returned 28
+call    1 never executed
+        -:  302:
+function _Z5auditRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEExi called 24 returned 100% blocks executed 84%
+       24:  303:void audit(const string& action, long long pnr, int trainNo) {
+       24:  304:    ofstream out(AUDIT_FILE, ios::app);
+call    0 returned 24
+branch  1 taken 24 (fallthrough)
+branch  2 taken 0 (throw)
+       24:  305:    time_t now = time(nullptr);
+call    0 returned 24
+       24:  306:    tm* local = localtime(&now);
+call    0 returned 24
+       24:  307:    if (local) out << put_time(local, "%Y-%m-%d %H:%M:%S");
+branch  0 taken 24 (fallthrough)
+branch  1 taken 0
+call    2 returned 24
+call    3 returned 24
+branch  4 taken 24 (fallthrough)
+branch  5 taken 0 (throw)
+    #####:  308:    else out << "unknown-time";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+       24:  309:    out << " | " << action << " | PNR=" << pnr << " | Train=" << trainNo << '\n';
+call    0 returned 24
+branch  1 taken 24 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 24
+branch  4 taken 24 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 24
+branch  7 taken 24 (fallthrough)
+branch  8 taken 0 (throw)
+call    9 returned 24
+branch 10 taken 24 (fallthrough)
+branch 11 taken 0 (throw)
+call   12 returned 24
+branch 13 taken 24 (fallthrough)
+branch 14 taken 0 (throw)
+call   15 returned 24
+branch 16 taken 24 (fallthrough)
+branch 17 taken 0 (throw)
+call   18 returned 24
+branch 19 taken 24 (fallthrough)
+branch 20 taken 0 (throw)
+       24:  310:}
+call    0 returned 24
+call    1 never executed
+        -:  311:
+function _Z11generatePNRRKSt6vectorI7BookingSaIS0_EE called 4 returned 100% blocks executed 94%
+        4:  312:long long generatePNR(const vector<Booking>& bookings) {
+        4:  313:    long long candidate = 1000000000LL + static_cast<long long>(time(nullptr) % 900000000LL);
+call    0 returned 4
+        5:  314:    for (int attempts = 0; attempts < 100000; ++attempts) {
+branch  0 taken 5
+branch  1 taken 0 (fallthrough)
+        5:  315:        bool used = false;
+        9:  316:        for (const auto& b : bookings) if (b.pnr == candidate) { used = true; break; }
+call    0 returned 5
+call    1 returned 5
+call    2 returned 5
+branch  3 taken 1 (fallthrough)
+branch  4 taken 4
+call    5 returned 4
+call    6 returned 9
+branch  7 taken 5
+branch  8 taken 4 (fallthrough)
+        5:  317:        if (!used) return candidate;
+branch  0 taken 4 (fallthrough)
+branch  1 taken 1
+        1:  318:        ++candidate;
+        -:  319:    }
+    #####:  320:    return 0;
+        -:  321:}
+        -:  322:
+function _Z10searchMenuRKSt6vectorI5TrainSaIS0_EERKS_I7BookingSaIS5_EE called 4 returned 100% blocks executed 57%
+        4:  323:void searchMenu(const vector<Train>& trains, const vector<Booking>& bookings) {
+        4:  324:    cout << "\n--- Search Trains ---\n";
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        8:  325:    string source = readLine("Source station: ");
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 4
+branch  4 taken 4 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 4
+call    7 never executed
+        4:  326:    string destination = readLine("Destination station: ");
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 4
+branch  4 taken 4 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 4
+call    7 never executed
+        4:  327:    string date = readDate();
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        4:  328:    auto matches = searchTrains(trains, source, destination);
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        4:  329:    if (matches.empty()) {
+call    0 returned 4
+branch  1 taken 2 (fallthrough)
+branch  2 taken 2
+        2:  330:        cout << "No trains found for that route. Try the station names shown in the demo data.\n";
+call    0 returned 2
+branch  1 taken 2 (fallthrough)
+branch  2 taken 0 (throw)
+        2:  331:        return;
+        -:  332:    }
+        8:  333:    for (const Train* t : matches) displayAvailability(*t, date, bookings);
+call    0 returned 2
+call    1 returned 2
+call    2 returned 6
+call    3 returned 6
+branch  4 taken 6 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 6
+call    7 returned 8
+branch  8 taken 6
+branch  9 taken 2 (fallthrough)
+        2:  334:    bool anyAvailable = false;
+        8:  335:    for (const Train* t : matches) {
+call    0 returned 2
+call    1 returned 2
+call    2 returned 6
+call    3 returned 6
+call    4 returned 8
+branch  5 taken 6
+branch  6 taken 2 (fallthrough)
+       48:  336:        for (const string& c : vector<string>{"Sleeper", "AC", "General"})
+call    0 returned 6
+branch  1 taken 6 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 6
+branch  4 taken 18 (fallthrough)
+branch  5 taken 6
+call    6 returned 18
+call    7 returned 6
+call    8 returned 18
+call    9 returned 18
+call   10 returned 24
+branch 11 taken 18
+branch 12 taken 6 (fallthrough)
+branch 13 never executed (fallthrough)
+branch 14 never executed
+call   15 never executed
+       18:  337:            if (totalForClass(*t, c) - bookedSeats(bookings, t->number, date, c) > 0)
+call    0 returned 18
+branch  1 taken 18 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 18
+branch  4 taken 18 (fallthrough)
+branch  5 taken 0 (throw)
+branch  6 taken 16 (fallthrough)
+branch  7 taken 2
+       22:  338:                anyAvailable = true;
+call    0 returned 6
+call    1 never executed
+        -:  339:    }
+        2:  340:    if (!anyAvailable) {
+branch  0 taken 0 (fallthrough)
+branch  1 taken 2
+    #####:  341:        cout << "No seats available on these trains for that date. Alternative trains on the same route:\n";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  342:        for (const Train* t : matches) cout << "  " << t->number << " - " << t->name << " (" << t->departure << "-" << t->arrival << ")\n";
+call    0 never executed
+call    1 never executed
+call    2 never executed
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+call   12 never executed
+branch 13 never executed (fallthrough)
+branch 14 never executed (throw)
+call   15 never executed
+branch 16 never executed (fallthrough)
+branch 17 never executed (throw)
+call   18 never executed
+branch 19 never executed (fallthrough)
+branch 20 never executed (throw)
+call   21 never executed
+branch 22 never executed (fallthrough)
+branch 23 never executed (throw)
+call   24 never executed
+branch 25 never executed (fallthrough)
+branch 26 never executed (throw)
+call   27 never executed
+branch 28 never executed (fallthrough)
+branch 29 never executed (throw)
+call   30 never executed
+call   31 never executed
+branch 32 never executed
+branch 33 never executed (fallthrough)
+        -:  343:    }
+       28:  344:}
+call    0 returned 6
+branch  1 taken 6 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 6
+branch  4 taken 6 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 6
+branch  7 taken 6 (fallthrough)
+branch  8 taken 0 (throw)
+call    9 returned 6
+call   10 returned 4
+branch 11 taken 2 (fallthrough)
+branch 12 taken 2
+call   13 returned 4
+branch 14 taken 2 (fallthrough)
+branch 15 taken 2
+call   16 returned 4
+branch 17 taken 2 (fallthrough)
+branch 18 taken 2
+call   19 returned 4
+branch 20 taken 2 (fallthrough)
+branch 21 taken 2
+branch 22 never executed (fallthrough)
+branch 23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed
+call   26 never executed
+call   27 never executed
+call   28 never executed
+call   29 never executed
+call   30 never executed
+        -:  345:
+function _Z13viewAllTrainsRKSt6vectorI5TrainSaIS0_EERKS_I7BookingSaIS5_EE called 0 returned 0% blocks executed 0%
+    #####:  346:void viewAllTrains(const vector<Train>& trains, const vector<Booking>& bookings) {
+    #####:  347:    cout << "\n--- All Trains in Demo Database ---\n";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  348:    if (trains.empty()) {
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed
+    #####:  349:        cout << "No train records are currently loaded.\n";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  350:        return;
+        -:  351:    }
+    #####:  352:    string date = readDate();
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  353:    cout << "\n" << left << setw(8) << "Number" << setw(29) << "Train name"
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+        -:  354:         << setw(23) << "From" << setw(23) << "To" << setw(8) << "Dep."
+    #####:  355:         << setw(8) << "Arr." << "SL/AC/GEN available\n";
+call    0 never executed
+call    1 never executed
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+call    5 never executed
+call    6 never executed
+call    7 never executed
+branch  8 never executed (fallthrough)
+branch  9 never executed (throw)
+call   10 never executed
+call   11 never executed
+call   12 never executed
+branch 13 never executed (fallthrough)
+branch 14 never executed (throw)
+call   15 never executed
+call   16 never executed
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+call   20 never executed
+call   21 never executed
+call   22 never executed
+branch 23 never executed (fallthrough)
+branch 24 never executed (throw)
+call   25 never executed
+call   26 never executed
+call   27 never executed
+branch 28 never executed (fallthrough)
+branch 29 never executed (throw)
+call   30 never executed
+branch 31 never executed (fallthrough)
+branch 32 never executed (throw)
+    #####:  356:    cout << string(116, '-') << "\n";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+call    9 never executed
+call   10 never executed
+    #####:  357:    for (const auto& t : trains) {
+call    0 never executed
+call    1 never executed
+call    2 never executed
+call    3 never executed
+branch  4 never executed
+branch  5 never executed (fallthrough)
+    #####:  358:        int sl = max(0, t.sleeperTotal - bookedSeats(bookings, t.number, date, "Sleeper"));
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+call    6 never executed
+call    7 never executed
+call    8 never executed
+    #####:  359:        int ac = max(0, t.acTotal - bookedSeats(bookings, t.number, date, "AC"));
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+call    6 never executed
+call    7 never executed
+call    8 never executed
+    #####:  360:        int gn = max(0, t.generalTotal - bookedSeats(bookings, t.number, date, "General"));
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+call    6 never executed
+call    7 never executed
+call    8 never executed
+    #####:  361:        cout << left << setw(8) << t.number << setw(29) << t.name.substr(0, 27)
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+call    3 never executed
+call    4 never executed
+call    5 never executed
+branch  6 never executed (fallthrough)
+branch  7 never executed (throw)
+call    8 never executed
+call    9 never executed
+    #####:  362:             << setw(23) << t.source.substr(0, 21) << setw(23) << t.destination.substr(0, 21)
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+call    6 never executed
+call    7 never executed
+call    8 never executed
+call    9 never executed
+call   10 never executed
+    #####:  363:             << setw(8) << t.departure << setw(8) << t.arrival
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+call    3 never executed
+call    4 never executed
+call    5 never executed
+branch  6 never executed (fallthrough)
+branch  7 never executed (throw)
+call    8 never executed
+call    9 never executed
+call   10 never executed
+branch 11 never executed (fallthrough)
+branch 12 never executed (throw)
+call   13 never executed
+call   14 never executed
+call   15 never executed
+branch 16 never executed (fallthrough)
+branch 17 never executed (throw)
+call   18 never executed
+call   19 never executed
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+call   23 never executed
+call   24 never executed
+call   25 never executed
+branch 26 never executed (fallthrough)
+branch 27 never executed (throw)
+    #####:  364:             << sl << "/" << ac << "/" << gn << "\n";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+call   12 never executed
+branch 13 never executed (fallthrough)
+branch 14 never executed (throw)
+call   15 never executed
+branch 16 never executed (fallthrough)
+branch 17 never executed (throw)
+        -:  365:    }
+    #####:  366:    cout << "\nTotal trains listed: " << trains.size()
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+call    3 never executed
+call    4 never executed
+branch  5 never executed (fallthrough)
+branch  6 never executed (throw)
+        -:  367:         << " | availability is calculated for " << date << ".\n"
+    #####:  368:         << "Note: routes, times, fares and capacities are illustrative demo data, not live railway data.\n";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    #####:  369:}
+call    0 never executed
+call    1 never executed
+        -:  370:
+function _Z19viewAllDestinationsRKSt6vectorI5TrainSaIS0_EE called 0 returned 0% blocks executed 0%
+    #####:  371:void viewAllDestinations(const vector<Train>& trains) {
+    #####:  372:    vector<string> cities;
+call    0 never executed
+    #####:  373:    for (const auto& t : trains) {
+call    0 never executed
+call    1 never executed
+call    2 never executed
+call    3 never executed
+call    4 never executed
+branch  5 never executed
+branch  6 never executed (fallthrough)
+    #####:  374:        if (find(cities.begin(), cities.end(), t.source) == cities.end()) cities.push_back(t.source);
+call    0 never executed
+call    1 never executed
+call    2 never executed
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+    #####:  375:        if (find(cities.begin(), cities.end(), t.destination) == cities.end()) cities.push_back(t.destination);
+call    0 never executed
+call    1 never executed
+call    2 never executed
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+        -:  376:    }
+function _ZZ19viewAllDestinationsRKSt6vectorI5TrainSaIS0_EEENKUlRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESC_E_clESC_SC_ called 0 returned 0% blocks executed 0%
+    #####:  377:    sort(cities.begin(), cities.end(), [](const string& a, const string& b) {
+call    0 never executed
+call    1 never executed
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+    #####:  378:        return lowerCopy(a) < lowerCopy(b);
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+call   12 never executed
+call   13 never executed
+call   14 never executed
+call   15 never executed
+call   16 never executed
+call   17 never executed
+call   18 never executed
+call   19 never executed
+        -:  379:    });
+    #####:  380:    cout << "\n--- Cities / Stations in Demo Database ---\n";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  381:    for (size_t i = 0; i < cities.size(); ++i) {
+call    0 never executed
+branch  1 never executed
+branch  2 never executed (fallthrough)
+    #####:  382:        cout << setw(3) << (i + 1) << ". " << cities[i] << "\n";
+call    0 never executed
+call    1 never executed
+call    2 never executed
+branch  3 never executed (fallthrough)
+branch  4 never executed (throw)
+call    5 never executed
+branch  6 never executed (fallthrough)
+branch  7 never executed (throw)
+call    8 never executed
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+call   12 never executed
+branch 13 never executed (fallthrough)
+branch 14 never executed (throw)
+        -:  383:    }
+    #####:  384:    cout << "\nTotal unique cities/stations: " << cities.size() << "\n";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+call    3 never executed
+call    4 never executed
+branch  5 never executed (fallthrough)
+branch  6 never executed (throw)
+call    7 never executed
+branch  8 never executed (fallthrough)
+branch  9 never executed (throw)
+    #####:  385:    cout << "These are only locations present in the demo train list.\n";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  386:}
+call    0 never executed
+call    1 never executed
+        -:  387:
+function _Z11printTicketRK7BookingRK5Train called 8 returned 100% blocks executed 100%
+        8:  388:void printTicket(const Booking& b, const Train& t) {
+        -:  389:    cout << "\n========================================\n"
+        -:  390:         << "          RAILWAY E-TICKET\n"
+        -:  391:         << "========================================\n"
+        8:  392:         << "PNR            : " << b.pnr << "\n"
+call    0 returned 8
+call    1 returned 8
+call    2 returned 8
+call    3 returned 8
+call    4 returned 8
+        8:  393:         << "Passenger      : " << b.passenger << "\n"
+        8:  394:         << "Train          : " << t.number << " - " << t.name << "\n"
+call    0 returned 8
+call    1 returned 8
+call    2 returned 8
+call    3 returned 8
+call    4 returned 8
+       16:  395:         << "Route          : " << t.source << " -> " << t.destination << "\n"
+        8:  396:         << "Journey date   : " << b.trainDate << "\n"
+       16:  397:         << "Timing         : " << t.departure << " - " << t.arrival << "\n"
+        8:  398:         << "Class          : " << b.className << "\n"
+        8:  399:         << "Seats          : " << b.seats << "\n"
+call    0 returned 8
+call    1 returned 8
+call    2 returned 8
+call    3 returned 8
+call    4 returned 8
+call    5 returned 8
+call    6 returned 8
+call    7 returned 8
+call    8 returned 8
+call    9 returned 8
+call   10 returned 8
+call   11 returned 8
+call   12 returned 8
+call   13 returned 8
+call   14 returned 8
+call   15 returned 8
+call   16 returned 8
+call   17 returned 8
+call   18 returned 8
+call   19 returned 8
+call   20 returned 8
+        8:  400:         << "Berth pref.    : " << b.berth << "\n"
+        8:  401:         << "Payment mode   : " << b.paymentMode << " (simulated)\n"
+        8:  402:         << "Total fare     : Rs. " << fixed << setprecision(2) << b.fare << "\n"
+call    0 returned 8
+call    1 returned 8
+call    2 returned 8
+call    3 returned 8
+call    4 returned 8
+call    5 returned 8
+call    6 returned 8
+call    7 returned 8
+call    8 returned 8
+call    9 returned 8
+call   10 returned 8
+call   11 returned 8
+call   12 returned 8
+        8:  403:         << "Status         : " << b.status << "\n";
+call    0 returned 8
+call    1 returned 8
+call    2 returned 8
+call    3 returned 8
+        8:  404:    if (b.status == "CANCELLED") cout << "Refund amount   : Rs. " << fixed << setprecision(2) << b.refund << " (simulated)\n";
+call    0 returned 8
+branch  1 taken 2 (fallthrough)
+branch  2 taken 6
+call    3 returned 2
+call    4 returned 2
+call    5 returned 2
+call    6 returned 2
+call    7 returned 2
+call    8 returned 2
+        8:  405:    cout << "========================================\n";
+call    0 returned 8
+        8:  406:}
+        -:  407:
+function _Z8bookMenuRKSt6vectorI5TrainSaIS0_EERS_I7BookingSaIS5_EE called 8 returned 100% blocks executed 65%
+        8:  408:void bookMenu(const vector<Train>& trains, vector<Booking>& bookings) {
+        8:  409:    cout << "\n--- Book Ticket ---\n";
+call    0 returned 8
+branch  1 taken 8 (fallthrough)
+branch  2 taken 0 (throw)
+       16:  410:    string source = readLine("Source station: ");
+call    0 returned 8
+branch  1 taken 8 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 8
+branch  4 taken 8 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 8
+call    7 never executed
+        8:  411:    string destination = readLine("Destination station: ");
+call    0 returned 8
+branch  1 taken 8 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 8
+branch  4 taken 8 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 8
+call    7 never executed
+        8:  412:    string date = readDate();
+call    0 returned 8
+branch  1 taken 8 (fallthrough)
+branch  2 taken 0 (throw)
+        8:  413:    auto matches = searchTrains(trains, source, destination);
+call    0 returned 8
+branch  1 taken 8 (fallthrough)
+branch  2 taken 0 (throw)
+        8:  414:    if (matches.empty()) {
+call    0 returned 8
+branch  1 taken 0 (fallthrough)
+branch  2 taken 8
+    #####:  415:        cout << "No trains found for that route.\n";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  416:        return;
+        -:  417:    }
+        8:  418:    cout << "\nMatching trains:\n";
+call    0 returned 8
+branch  1 taken 8 (fallthrough)
+branch  2 taken 0 (throw)
+       30:  419:    for (const Train* t : matches) displayAvailability(*t, date, bookings);
+call    0 returned 8
+call    1 returned 8
+call    2 returned 22
+call    3 returned 22
+branch  4 taken 22 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 22
+call    7 returned 30
+branch  8 taken 22
+branch  9 taken 8 (fallthrough)
+        8:  420:    int trainNo = readInt("Enter train number: ", 1, 999999);
+call    0 returned 8
+branch  1 taken 8 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 8
+branch  4 taken 8 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 8
+call    7 never executed
+        8:  421:    const Train* selected = nullptr;
+       30:  422:    for (const Train* t : matches) if (t->number == trainNo) selected = t;
+call    0 returned 8
+call    1 returned 8
+call    2 returned 22
+branch  3 taken 8 (fallthrough)
+branch  4 taken 14
+call    5 returned 22
+call    6 returned 30
+branch  7 taken 22
+branch  8 taken 8 (fallthrough)
+        8:  423:    if (!selected) {
+branch  0 taken 0 (fallthrough)
+branch  1 taken 8
+    #####:  424:        cout << "That train is not in the search results.\n";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  425:        return;
+        -:  426:    }
+        -:  427:
+        8:  428:    cout << "\nClass: 1. Sleeper  2. AC  3. General\n";
+call    0 returned 8
+branch  1 taken 8 (fallthrough)
+branch  2 taken 0 (throw)
+       16:  429:    int classChoice = readInt("Choose class: ", 1, 3);
+call    0 returned 8
+branch  1 taken 8 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 8
+branch  4 taken 8 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 8
+call    7 never executed
+       8*:  430:    string className = classChoice == 1 ? "Sleeper" : classChoice == 2 ? "AC" : "General";
+branch  0 taken 6 (fallthrough)
+branch  1 taken 2
+branch  2 taken 0 (fallthrough)
+branch  3 taken 6
+call    4 returned 8
+branch  5 taken 8 (fallthrough)
+branch  6 taken 0 (throw)
+        8:  431:    int available = totalForClass(*selected, className)
+call    0 returned 8
+branch  1 taken 8 (fallthrough)
+branch  2 taken 0 (throw)
+        8:  432:                  - bookedSeats(bookings, trainNo, date, className);
+call    0 returned 8
+branch  1 taken 8 (fallthrough)
+branch  2 taken 0 (throw)
+        8:  433:    if (available <= 0) {
+branch  0 taken 2 (fallthrough)
+branch  1 taken 6
+        2:  434:        cout << "This class is full. Alternative trains on the same route:\n";
+call    0 returned 2
+branch  1 taken 2 (fallthrough)
+branch  2 taken 0 (throw)
+        8:  435:        for (const Train* t : matches) {
+call    0 returned 2
+call    1 returned 2
+call    2 returned 6
+call    3 returned 8
+branch  4 taken 6
+branch  5 taken 2 (fallthrough)
+        6:  436:            int alt = totalForClass(*t, className) - bookedSeats(bookings, t->number, date, className);
+call    0 returned 6
+branch  1 taken 6 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 6
+branch  4 taken 6 (fallthrough)
+branch  5 taken 0 (throw)
+        6:  437:            cout << "  " << t->number << " - " << t->name << " | " << className << " available: " << max(0,alt) << "\n";
+call    0 returned 6
+branch  1 taken 6 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 6
+branch  4 taken 6 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 6
+branch  7 taken 6 (fallthrough)
+branch  8 taken 0 (throw)
+call    9 returned 6
+branch 10 taken 6 (fallthrough)
+branch 11 taken 0 (throw)
+call   12 returned 6
+branch 13 taken 6 (fallthrough)
+branch 14 taken 0 (throw)
+call   15 returned 6
+branch 16 taken 6 (fallthrough)
+branch 17 taken 0 (throw)
+call   18 returned 6
+branch 19 taken 6 (fallthrough)
+branch 20 taken 0 (throw)
+call   21 returned 6
+call   22 returned 6
+branch 23 taken 6 (fallthrough)
+branch 24 taken 0 (throw)
+call   25 returned 6
+branch 26 taken 6 (fallthrough)
+branch 27 taken 0 (throw)
+call   28 returned 6
+        -:  438:        }
+        2:  439:        return;
+        -:  440:    }
+        6:  441:    int seats = readInt("Number of seats (1-" + to_string(available) + "): ", 1, available);
+call    0 returned 6
+call    1 returned 6
+branch  2 taken 6 (fallthrough)
+branch  3 taken 0 (throw)
+call    4 returned 6
+branch  5 taken 6 (fallthrough)
+branch  6 taken 0 (throw)
+call    7 returned 6
+branch  8 taken 6 (fallthrough)
+branch  9 taken 0 (throw)
+call   10 returned 6
+call   11 returned 6
+call   12 returned 6
+call   13 never executed
+call   14 never executed
+call   15 never executed
+       6*:  442:    string passenger = currentUserName.empty() ? readLine("Passenger name: ") : currentUserName;
+call    0 returned 6
+branch  1 taken 0 (fallthrough)
+branch  2 taken 6
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+call    9 returned 6
+branch 10 taken 6 (fallthrough)
+branch 11 taken 0 (throw)
+branch 12 taken 0 (fallthrough)
+branch 13 taken 6
+call   14 never executed
+branch 15 taken 0 (fallthrough)
+branch 16 taken 6
+branch 17 never executed (fallthrough)
+branch 18 never executed
+call   19 never executed
+branch 20 never executed (fallthrough)
+branch 21 never executed
+        6:  443:    if (!currentUserName.empty()) cout << "Passenger: " << passenger << " (registered account)\n";
+call    0 returned 6
+branch  1 taken 6 (fallthrough)
+branch  2 taken 0
+call    3 returned 6
+branch  4 taken 6 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 6
+branch  7 taken 6 (fallthrough)
+branch  8 taken 0 (throw)
+call    9 returned 6
+branch 10 taken 6 (fallthrough)
+branch 11 taken 0 (throw)
+        6:  444:    if (passenger.empty()) {
+call    0 returned 6
+branch  1 taken 0 (fallthrough)
+branch  2 taken 6
+    #####:  445:        cout << "Passenger name cannot be empty.\n";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  446:        return;
+        -:  447:    }
+        -:  448:
+        6:  449:    cout << "Berth preference: 1. Lower  2. Middle  3. Upper  4. Window\n";
+call    0 returned 6
+branch  1 taken 6 (fallthrough)
+branch  2 taken 0 (throw)
+       12:  450:    int berthChoice = readInt("Choose preference: ", 1, 4);
+call    0 returned 6
+branch  1 taken 6 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 6
+branch  4 taken 6 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 6
+call    7 never executed
+       4*:  451:    string berth = berthChoice == 1 ? "Lower" : berthChoice == 2 ? "Middle" :
+branch  0 taken 2 (fallthrough)
+branch  1 taken 0
+      10*:  452:                   berthChoice == 3 ? "Upper" : "Window";
+branch  0 taken 2 (fallthrough)
+branch  1 taken 4
+branch  2 taken 0 (fallthrough)
+branch  3 taken 2
+call    4 returned 6
+branch  5 taken 6 (fallthrough)
+branch  6 taken 0 (throw)
+        -:  453:
+        6:  454:    double fare = fareForClass(*selected, className) * seats;
+call    0 returned 6
+branch  1 taken 6 (fallthrough)
+branch  2 taken 0 (throw)
+        6:  455:    cout << "\nBooking summary\nTrain: " << selected->name << " (" << trainNo << ")"
+call    0 returned 6
+branch  1 taken 6 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 6
+branch  4 taken 6 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 6
+branch  7 taken 6 (fallthrough)
+branch  8 taken 0 (throw)
+        6:  456:         << "\nClass: " << className << "\nSeats: " << seats
+call    0 returned 6
+branch  1 taken 6 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 6
+branch  4 taken 6 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 6
+branch  7 taken 6 (fallthrough)
+branch  8 taken 0 (throw)
+call    9 returned 6
+branch 10 taken 6 (fallthrough)
+branch 11 taken 0 (throw)
+call   12 returned 6
+branch 13 taken 6 (fallthrough)
+branch 14 taken 0 (throw)
+        6:  457:         << "\nFare: Rs. " << fixed << setprecision(2) << fare << "\n";
+call    0 returned 6
+branch  1 taken 6 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 6
+branch  4 taken 6 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 6
+branch  7 taken 6 (fallthrough)
+branch  8 taken 0 (throw)
+call    9 returned 6
+call   10 returned 6
+call   11 returned 6
+branch 12 taken 6 (fallthrough)
+branch 13 taken 0 (throw)
+call   14 returned 6
+branch 15 taken 6 (fallthrough)
+branch 16 taken 0 (throw)
+        6:  458:    cout << "Payment mode: 1. Cash  2. Card  3. UPI\n";
+call    0 returned 6
+branch  1 taken 6 (fallthrough)
+branch  2 taken 0 (throw)
+       12:  459:    int paymentChoice = readInt("Choose simulated payment mode: ", 1, 3);
+call    0 returned 6
+branch  1 taken 6 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 6
+branch  4 taken 6 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 6
+call    7 never executed
+       12:  460:    string payment = paymentChoice == 1 ? "Cash" : paymentChoice == 2 ? "Card" : "UPI";
+branch  0 taken 3 (fallthrough)
+branch  1 taken 3
+branch  2 taken 1 (fallthrough)
+branch  3 taken 2
+call    4 returned 6
+branch  5 taken 6 (fallthrough)
+branch  6 taken 0 (throw)
+        6:  461:    string confirm = lowerCopy(readLine("Confirm booking? (yes/no): "));
+call    0 returned 6
+branch  1 taken 6 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 6
+branch  4 taken 6 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 6
+branch  7 taken 6 (fallthrough)
+branch  8 taken 0 (throw)
+call    9 returned 6
+call   10 returned 6
+call   11 never executed
+call   12 never executed
+        6:  462:    if (confirm != "yes" && confirm != "y") {
+call    0 returned 6
+branch  1 taken 6 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 2 (fallthrough)
+branch  4 taken 4
+call    5 returned 2
+branch  6 taken 2 (fallthrough)
+branch  7 taken 0 (throw)
+branch  8 taken 2 (fallthrough)
+branch  9 taken 0
+branch 10 taken 2 (fallthrough)
+branch 11 taken 4
+        2:  463:        cout << "Booking not submitted.\n";
+call    0 returned 2
+branch  1 taken 2 (fallthrough)
+branch  2 taken 0 (throw)
+        2:  464:        return;
+        -:  465:    }
+        -:  466:
+        -:  467:    // Re-check availability immediately before commit to prevent over-booking.
+        4:  468:    available = totalForClass(*selected, className)
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        4:  469:              - bookedSeats(bookings, trainNo, date, className);
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        4:  470:    if (seats > available) {
+branch  0 taken 0 (fallthrough)
+branch  1 taken 4
+    #####:  471:        cout << "Booking rejected: not enough seats remain.\n";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  472:        return;
+        -:  473:    }
+        4:  474:    long long pnr = generatePNR(bookings);
+call    0 returned 4
+        4:  475:    if (pnr == 0) {
+branch  0 taken 0 (fallthrough)
+branch  1 taken 4
+    #####:  476:        cout << "Could not generate a unique PNR. Please try again.\n";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  477:        return;
+        -:  478:    }
+        4:  479:    Booking b;
+call    0 returned 4
+        4:  480:    b.pnr = pnr;
+        4:  481:    b.passenger = passenger;
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        4:  482:    b.trainNumber = trainNo;
+        4:  483:    b.trainDate = date;
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        4:  484:    b.className = className;
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        4:  485:    b.seats = seats;
+        4:  486:    b.berth = berth;
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        4:  487:    b.paymentMode = payment;
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        4:  488:    b.fare = fare;
+        4:  489:    b.status = "CONFIRMED";
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        4:  490:    b.refund = 0.0;
+        4:  491:    b.ownerContact = currentUserContact;
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        4:  492:    bookings.push_back(b);
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        4:  493:    if (!saveBookings(bookings)) {
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 0 (fallthrough)
+branch  4 taken 4
+    #####:  494:        bookings.pop_back();
+call    0 never executed
+    #####:  495:        cout << "Could not save booking to disk. No booking was confirmed.\n";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+    #####:  496:        return;
+        -:  497:    }
+        4:  498:    audit("BOOKING_CONFIRMED", pnr, trainNo);
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 4
+branch  4 taken 4 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 4
+call    7 never executed
+        4:  499:    printTicket(b, *selected);
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+       32:  500:}
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0
+call    3 returned 6
+branch  4 taken 4 (fallthrough)
+branch  5 taken 2
+call    6 returned 6
+branch  7 taken 4 (fallthrough)
+branch  8 taken 2
+call    9 returned 6
+branch 10 taken 4 (fallthrough)
+branch 11 taken 2
+call   12 returned 6
+branch 13 taken 4 (fallthrough)
+branch 14 taken 2
+call   15 returned 8
+branch 16 taken 4 (fallthrough)
+branch 17 taken 4
+call   18 returned 8
+branch 19 taken 4 (fallthrough)
+branch 20 taken 4
+call   21 returned 8
+branch 22 taken 4 (fallthrough)
+branch 23 taken 4
+call   24 returned 8
+branch 25 taken 4 (fallthrough)
+branch 26 taken 4
+call   27 returned 8
+branch 28 taken 4 (fallthrough)
+branch 29 taken 4
+call   30 never executed
+call   31 never executed
+call   32 never executed
+call   33 never executed
+call   34 never executed
+call   35 never executed
+call   36 never executed
+call   37 never executed
+call   38 never executed
+call   39 never executed
+        -:  501:
+function _Z8checkPNRRKSt6vectorI7BookingSaIS0_EERKS_I5TrainSaIS5_EE called 6 returned 100% blocks executed 84%
+        6:  502:void checkPNR(const vector<Booking>& bookings, const vector<Train>& trains) {
+        6:  503:    cout << "\n--- Check PNR ---\n";
+call    0 returned 6
+branch  1 taken 6 (fallthrough)
+branch  2 taken 0 (throw)
+        -:  504:    long long pnr;
+        -:  505:    while (true) {
+        8:  506:        cout << "Enter PNR: ";
+call    0 returned 8
+branch  1 taken 8 (fallthrough)
+branch  2 taken 0 (throw)
+        8:  507:        string s;
+call    0 returned 8
+        8:  508:        getline(cin, s);
+call    0 returned 8
+branch  1 taken 8 (fallthrough)
+branch  2 taken 0 (throw)
+        8:  509:        stringstream ss(s);
+call    0 returned 8
+call    1 returned 8
+branch  2 taken 8 (fallthrough)
+branch  3 taken 0 (throw)
+        -:  510:        char extra;
+        8:  511:        if ((ss >> pnr) && !(ss >> extra) && pnr > 0) break;
+call    0 returned 8
+branch  1 taken 8 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 8
+branch  4 taken 8 (fallthrough)
+branch  5 taken 0 (throw)
+branch  6 taken 6 (fallthrough)
+branch  7 taken 2
+call    8 returned 6
+branch  9 taken 6 (fallthrough)
+branch 10 taken 0 (throw)
+call   11 returned 6
+branch 12 taken 6 (fallthrough)
+branch 13 taken 0 (throw)
+branch 14 taken 6 (fallthrough)
+branch 15 taken 0
+branch 16 taken 6 (fallthrough)
+branch 17 taken 0
+branch 18 taken 6 (fallthrough)
+branch 19 taken 2
+        2:  512:        cout << "Enter a valid numeric PNR.\n";
+call    0 returned 2
+branch  1 taken 2 (fallthrough)
+branch  2 taken 0 (throw)
+       16:  513:    }
+call    0 returned 8
+branch  1 taken 2 (fallthrough)
+branch  2 taken 6
+call    3 returned 8
+branch  4 taken 2 (fallthrough)
+branch  5 taken 6
+call    6 never executed
+call    7 never executed
+       6*:  514:    for (const auto& b : bookings) {
+call    0 returned 6
+call    1 returned 6
+call    2 returned 4
+call    3 never executed
+call    4 returned 6
+branch  5 taken 4
+branch  6 taken 2 (fallthrough)
+        4:  515:        if (b.pnr == pnr) {
+branch  0 taken 4 (fallthrough)
+branch  1 taken 0
+       12:  516:            for (const auto& t : trains) if (t.number == b.trainNumber) {
+call    0 returned 4
+call    1 returned 4
+call    2 returned 12
+branch  3 taken 4 (fallthrough)
+branch  4 taken 8
+call    5 returned 8
+call    6 returned 12
+branch  7 taken 12
+branch  8 taken 0 (fallthrough)
+        4:  517:                printTicket(b, t);
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+        4:  518:                return;
+        -:  519:            }
+        -:  520:        }
+        -:  521:    }
+        2:  522:    cout << "PNR not found.\n";
+call    0 returned 2
+branch  1 taken 2 (fallthrough)
+branch  2 taken 0 (throw)
+        -:  523:}
+        -:  524:
+        -:  525:
+function _Z12readPasswordRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE called 40 returned 100% blocks executed 69%
+       40:  526:string readPassword(const string& prompt) {
+       40:  527:    cout << prompt; string value;
+call    0 returned 40
+branch  1 taken 40 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 40
+        -:  528:#ifdef _WIN32
+        -:  529:    while (true) { int ch = _getch(); if (ch == '\r') break; if (ch == '\b') { if (!value.empty()) { value.pop_back(); cout << "\b \b"; } } else if (ch >= 32 && ch <= 126 && value.size() < 128) { value.push_back((char)ch); cout << '*'; } }
+        -:  530:#else
+       40:  531:    termios oldt{}, newt{}; bool changed = (tcgetattr(STDIN_FILENO, &oldt) == 0);
+call    0 returned 40
+      40*:  532:    if (changed) { newt=oldt; newt.c_lflag &= ~ECHO; tcsetattr(STDIN_FILENO, TCSANOW, &newt); }
+branch  0 taken 0 (fallthrough)
+branch  1 taken 40
+call    2 never executed
+       40:  533:    getline(cin, value);
+call    0 returned 40
+branch  1 taken 40 (fallthrough)
+branch  2 taken 0 (throw)
+      40*:  534:    if (changed) { tcsetattr(STDIN_FILENO, TCSANOW, &oldt); cout << '\n'; }
+branch  0 taken 0 (fallthrough)
+branch  1 taken 40
+call    2 never executed
+call    3 never executed
+branch  4 never executed (fallthrough)
+branch  5 never executed (throw)
+        -:  535:#endif
+       80:  536:    cout << '\n'; return value;
+call    0 returned 40
+branch  1 taken 40 (fallthrough)
+branch  2 taken 0 (throw)
+    =====:  537:}
+call    0 never executed
+function _Z12passwordHashRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE called 34 returned 100% blocks executed 88%
+       34:  538:string passwordHash(const string& input) {
+        -:  539:    // FNV-1a hash for this academic demo; use a vetted password KDF in production.
+       34:  540:    unsigned long long h=1469598103934665603ULL;
+      274:  541:    for (unsigned char c : input) { h ^= c; h *= 1099511628211ULL; }
+call    0 returned 34
+call    1 returned 34
+call    2 returned 240
+call    3 returned 240
+call    4 returned 274
+branch  5 taken 240
+branch  6 taken 34 (fallthrough)
+       68:  542:    stringstream ss; ss << hex << h; return ss.str();
+call    0 returned 34
+branch  1 taken 34 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 34
+branch  4 taken 34 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 34
+branch  7 taken 34 (fallthrough)
+branch  8 taken 0 (throw)
+call    9 returned 34
+branch 10 taken 34 (fallthrough)
+branch 11 taken 0 (throw)
+       34:  543:}
+call    0 returned 34
+call    1 never executed
+        -:  544:struct User { string name, contact, hash; int failed=0; bool locked=false; };
+function _Z9loadUsersv called 40 returned 100% blocks executed 70%
+       40:  545:vector<User> loadUsers() {
+       40:  546:    vector<User> users; ifstream in(USER_FILE); string line;
+call    0 returned 40
+call    1 returned 40
+branch  2 taken 40 (fallthrough)
+branch  3 taken 0 (throw)
+call    4 returned 40
+      111:  547:    while (getline(in,line)) { stringstream ss(line); User u; string locked, failed;
+call    0 returned 71
+call    1 returned 71
+branch  2 taken 71 (fallthrough)
+branch  3 taken 0 (throw)
+call    4 returned 71
+call    5 returned 71
+call    6 returned 71
+call    7 returned 111
+branch  8 taken 111 (fallthrough)
+branch  9 taken 0 (throw)
+call   10 returned 111
+branch 11 taken 111 (fallthrough)
+branch 12 taken 0 (throw)
+branch 13 taken 71
+branch 14 taken 40 (fallthrough)
+      71*:  548:        if (getline(ss,u.name,'|') && getline(ss,u.contact,'|') && getline(ss,u.hash,'|')) {
+call    0 returned 71
+branch  1 taken 71 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 71
+branch  4 taken 71 (fallthrough)
+branch  5 taken 0 (throw)
+branch  6 taken 71 (fallthrough)
+branch  7 taken 0
+call    8 returned 71
+branch  9 taken 71 (fallthrough)
+branch 10 taken 0 (throw)
+call   11 returned 71
+branch 12 taken 71 (fallthrough)
+branch 13 taken 0 (throw)
+branch 14 taken 71 (fallthrough)
+branch 15 taken 0
+call   16 returned 71
+branch 17 taken 71 (fallthrough)
+branch 18 taken 0 (throw)
+call   19 returned 71
+branch 20 taken 71 (fallthrough)
+branch 21 taken 0 (throw)
+branch 22 taken 71 (fallthrough)
+branch 23 taken 0
+branch 24 taken 71 (fallthrough)
+branch 25 taken 0
+       71:  549:            if (getline(ss,failed,'|')) try {u.failed=stoi(failed);} catch(...) {}
+call    0 returned 71
+branch  1 taken 71 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 71
+branch  4 taken 71 (fallthrough)
+branch  5 taken 0 (throw)
+branch  6 taken 71 (fallthrough)
+branch  7 taken 0
+call    8 returned 71
+branch  9 taken 71 (fallthrough)
+branch 10 taken 0 (throw)
+call   11 never executed
+call   12 never executed
+branch 13 never executed (fallthrough)
+branch 14 never executed (throw)
+       71:  550:            if (getline(ss,locked,'|')) u.locked=(locked=="1");
+call    0 returned 71
+branch  1 taken 71 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 71
+branch  4 taken 71 (fallthrough)
+branch  5 taken 0 (throw)
+branch  6 taken 71 (fallthrough)
+branch  7 taken 0
+call    8 returned 71
+branch  9 taken 71 (fallthrough)
+branch 10 taken 0 (throw)
+       71:  551:            users.push_back(u);
+call    0 returned 71
+branch  1 taken 71 (fallthrough)
+branch  2 taken 0 (throw)
+        -:  552:        }
+      151:  553:    } return users;
+call    0 returned 71
+call    1 returned 71
+call    2 returned 71
+call    3 returned 71
+call    4 never executed
+call    5 never executed
+call    6 never executed
+call    7 never executed
+       40:  554:}
+call    0 returned 40
+call    1 returned 40
+call    2 never executed
+call    3 never executed
+call    4 never executed
+function _Z9saveUsersRKSt6vectorI4UserSaIS0_EE called 34 returned 100% blocks executed 69%
+     102*:  555:bool saveUsers(const vector<User>& users) { ofstream out(USER_FILE,ios::trunc); if(!out)return false; for(const auto&u:users) out<<clean(u.name)<<'|'<<clean(u.contact)<<'|'<<u.hash<<'|'<<u.failed<<'|'<<(u.locked?1:0)<<'\n'; return (bool)out; }
+call    0 returned 34
+branch  1 taken 34 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 34
+branch  4 taken 34 (fallthrough)
+branch  5 taken 0 (throw)
+branch  6 taken 0 (fallthrough)
+branch  7 taken 34
+call    8 returned 34
+call    9 returned 34
+call   10 returned 68
+call   11 returned 68
+branch 12 taken 68 (fallthrough)
+branch 13 taken 0 (throw)
+call   14 returned 68
+branch 15 taken 68 (fallthrough)
+branch 16 taken 0 (throw)
+call   17 returned 68
+branch 18 taken 68 (fallthrough)
+branch 19 taken 0 (throw)
+call   20 returned 68
+branch 21 taken 68 (fallthrough)
+branch 22 taken 0 (throw)
+call   23 returned 68
+branch 24 taken 68 (fallthrough)
+branch 25 taken 0 (throw)
+call   26 returned 68
+branch 27 taken 68 (fallthrough)
+branch 28 taken 0 (throw)
+call   29 returned 68
+branch 30 taken 68 (fallthrough)
+branch 31 taken 0 (throw)
+call   32 returned 68
+branch 33 taken 68 (fallthrough)
+branch 34 taken 0 (throw)
+call   35 returned 68
+branch 36 taken 68 (fallthrough)
+branch 37 taken 0 (throw)
+call   38 returned 68
+branch 39 taken 68 (fallthrough)
+branch 40 taken 0 (throw)
+call   41 returned 68
+branch 42 taken 68 (fallthrough)
+branch 43 taken 0 (throw)
+call   44 returned 68
+branch 45 taken 68 (fallthrough)
+branch 46 taken 0 (throw)
+branch 47 taken 24 (fallthrough)
+branch 48 taken 44
+call   49 returned 68
+branch 50 taken 68 (fallthrough)
+branch 51 taken 0 (throw)
+call   52 returned 68
+branch 53 taken 68 (fallthrough)
+branch 54 taken 0 (throw)
+call   55 returned 68
+call   56 returned 68
+call   57 returned 68
+call   58 returned 68
+call   59 returned 68
+call   60 returned 102
+branch 61 taken 68
+branch 62 taken 34 (fallthrough)
+call   63 returned 34
+branch 64 taken 34 (fallthrough)
+branch 65 taken 0 (throw)
+call   66 returned 34
+call   67 never executed
+call   68 never executed
+call   69 never executed
+call   70 never executed
+call   71 never executed
+function _Z12registerUserv called 9 returned 100% blocks executed 56%
+        9:  556:bool registerUser() {
+        9:  557:    auto users=loadUsers(); cout<<"\n--- Passenger Registration ---\n";
+call    0 returned 9
+branch  1 taken 9 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 9
+branch  4 taken 9 (fallthrough)
+branch  5 taken 0 (throw)
+       27:  558:    string name=readLine("Full name: "), contact=readLine("Contact number (or username): ");
+call    0 returned 9
+branch  1 taken 9 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 9
+branch  4 taken 9 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 9
+call    7 returned 9
+branch  8 taken 9 (fallthrough)
+branch  9 taken 0 (throw)
+call   10 returned 9
+branch 11 taken 9 (fallthrough)
+branch 12 taken 0 (throw)
+call   13 returned 9
+call   14 never executed
+call   15 never executed
+       9*:  559:    if(name.empty() || contact.empty() || contact.find('|')!=string::npos) {cout<<"Name/contact cannot be empty.\n";return false;}
+call    0 returned 9
+branch  1 taken 9 (fallthrough)
+branch  2 taken 0
+call    3 returned 9
+branch  4 taken 9 (fallthrough)
+branch  5 taken 0
+call    6 returned 9
+branch  7 taken 0 (fallthrough)
+branch  8 taken 9
+branch  9 taken 0 (fallthrough)
+branch 10 taken 9
+call   11 never executed
+branch 12 never executed (fallthrough)
+branch 13 never executed (throw)
+function _ZZ12registerUservENKUlRK4UserE_clES1_ called 8 returned 100% blocks executed 100%
+       17:  560:    if(any_of(users.begin(),users.end(),[&](const User&u){return u.contact==contact;})){cout<<"That contact is already registered.\n";return false;}
+call    0 returned 9
+call    1 returned 9
+call    2 returned 9
+branch  3 taken 9 (fallthrough)
+branch  4 taken 0 (throw)
+branch  5 taken 2 (fallthrough)
+branch  6 taken 7
+call    7 returned 2
+branch  8 taken 2 (fallthrough)
+branch  9 taken 0 (throw)
+call   10 returned 8
+       14:  561:    string pass=readPassword("Create password (minimum 6 characters): "); if(pass.size()<6){cout<<"Password must be at least 6 characters.\n";return false;}
+call    0 returned 7
+branch  1 taken 7 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 7
+branch  4 taken 7 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 7
+call    7 returned 7
+branch  8 taken 2 (fallthrough)
+branch  9 taken 5
+call   10 returned 2
+branch 11 taken 2 (fallthrough)
+branch 12 taken 0 (throw)
+call   13 never executed
+       5*:  562:    users.push_back({name,contact,passwordHash(pass),0,false}); if(!saveUsers(users)){cout<<"Could not save account.\n";return false;}
+call    0 returned 5
+call    1 returned 5
+branch  2 taken 5 (fallthrough)
+branch  3 taken 0 (throw)
+branch  4 taken 0 (fallthrough)
+branch  5 taken 5
+call    6 never executed
+branch  7 never executed (fallthrough)
+branch  8 never executed (throw)
+call    9 never executed
+        5:  563:    cout<<"Registration successful. Please log in.\n"; return true;
+call    0 returned 5
+branch  1 taken 5 (fallthrough)
+branch  2 taken 0 (throw)
+       14:  564:}
+call    0 returned 5
+branch  1 taken 5 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 5
+branch  4 taken 5 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 5
+branch  7 taken 5 (fallthrough)
+branch  8 taken 0 (throw)
+call    9 returned 5
+branch 10 taken 5 (fallthrough)
+branch 11 taken 0 (throw)
+call   12 returned 7
+call   13 returned 9
+call   14 returned 9
+call   15 returned 9
+branch 16 never executed (fallthrough)
+branch 17 never executed
+call   18 never executed
+branch 19 never executed (fallthrough)
+branch 20 never executed
+call   21 never executed
+branch 22 never executed (fallthrough)
+branch 23 never executed
+call   24 never executed
+call   25 never executed
+call   26 never executed
+call   27 never executed
+call   28 never executed
+function _Z9loginUserv called 33 returned 100% blocks executed 70%
+       33:  565:bool loginUser() {
+      132:  566:    cout<<"\n--- Login ---\n"; string contact=readLine("Contact/username (admin for administrator): "); string pass=readPassword("Password: ");
+call    0 returned 33
+branch  1 taken 33 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 33
+branch  4 taken 33 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 33
+branch  7 taken 33 (fallthrough)
+branch  8 taken 0 (throw)
+call    9 returned 33
+call   10 returned 33
+branch 11 taken 33 (fallthrough)
+branch 12 taken 0 (throw)
+call   13 returned 33
+branch 14 taken 33 (fallthrough)
+branch 15 taken 0 (throw)
+call   16 returned 33
+call   17 never executed
+call   18 never executed
+       37:  567:    if(contact==ADMIN_CONTACT && pass==ADMIN_PASSWORD){isAdmin=true;currentUserName="Administrator";currentUserContact=ADMIN_CONTACT;cout<<"Administrator login successful. (Change the demo credentials before real use.)\n";audit("ADMIN_LOGIN",0,0);return true;}
+call    0 returned 33
+branch  1 taken 2 (fallthrough)
+branch  2 taken 31
+call    3 returned 2
+branch  4 taken 2 (fallthrough)
+branch  5 taken 0
+branch  6 taken 2 (fallthrough)
+branch  7 taken 31
+call    8 returned 2
+branch  9 taken 2 (fallthrough)
+branch 10 taken 0 (throw)
+call   11 returned 2
+branch 12 taken 2 (fallthrough)
+branch 13 taken 0 (throw)
+call   14 returned 2
+branch 15 taken 2 (fallthrough)
+branch 16 taken 0 (throw)
+call   17 returned 2
+branch 18 taken 2 (fallthrough)
+branch 19 taken 0 (throw)
+call   20 returned 2
+branch 21 taken 2 (fallthrough)
+branch 22 taken 0 (throw)
+call   23 returned 2
+call   24 never executed
+       41:  568:    auto users=loadUsers(); for(auto &u:users) if(u.contact==contact){
+call    0 returned 31
+branch  1 taken 31 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 31
+call    4 returned 31
+call    5 returned 41
+call    6 returned 41
+branch  7 taken 31 (fallthrough)
+branch  8 taken 10
+call    9 returned 10
+call   10 returned 41
+branch 11 taken 41
+branch 12 taken 0 (fallthrough)
+       60:  569:        if(u.locked){cout<<"Account locked after 3 failed login attempts. Contact administrator.\n";return false;}
+branch  0 taken 2 (fallthrough)
+branch  1 taken 29
+call    2 returned 2
+branch  3 taken 2 (fallthrough)
+branch  4 taken 0 (throw)
+       29:  570:        if(u.hash==passwordHash(pass)){u.failed=0;saveUsers(users);currentUserName=u.name;currentUserContact=u.contact;isAdmin=false;cout<<"Welcome, "<<u.name<<".\n";return true;}
+call    0 returned 29
+branch  1 taken 29 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 29
+call    4 returned 29
+branch  5 taken 23 (fallthrough)
+branch  6 taken 6
+call    7 returned 23
+branch  8 taken 23 (fallthrough)
+branch  9 taken 0 (throw)
+call   10 returned 23
+branch 11 taken 23 (fallthrough)
+branch 12 taken 0 (throw)
+call   13 returned 23
+branch 14 taken 23 (fallthrough)
+branch 15 taken 0 (throw)
+call   16 returned 23
+branch 17 taken 23 (fallthrough)
+branch 18 taken 0 (throw)
+call   19 returned 23
+branch 20 taken 23 (fallthrough)
+branch 21 taken 0 (throw)
+call   22 returned 23
+branch 23 taken 23 (fallthrough)
+branch 24 taken 0 (throw)
+       12:  571:        u.failed++; if(u.failed>=3)u.locked=true; saveUsers(users); audit("LOGIN_FAILED",0,0);
+branch  0 taken 2 (fallthrough)
+branch  1 taken 4
+call    2 returned 6
+branch  3 taken 6 (fallthrough)
+branch  4 taken 0 (throw)
+call    5 returned 6
+branch  6 taken 6 (fallthrough)
+branch  7 taken 0 (throw)
+call    8 returned 6
+branch  9 taken 6 (fallthrough)
+branch 10 taken 0 (throw)
+call   11 returned 6
+call   12 never executed
+        6:  572:        cout<<"Incorrect password. Failed attempts: "<<u.failed<<"/3"<<(u.locked?" — account locked.":"")<<"\n";return false;
+call    0 returned 6
+branch  1 taken 6 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 6
+branch  4 taken 6 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 6
+branch  7 taken 6 (fallthrough)
+branch  8 taken 0 (throw)
+branch  9 taken 2 (fallthrough)
+branch 10 taken 4
+call   11 returned 6
+branch 12 taken 6 (fallthrough)
+branch 13 taken 0 (throw)
+call   14 returned 6
+branch 15 taken 6 (fallthrough)
+branch 16 taken 0 (throw)
+        -:  573:    }
+    #####:  574:    cout<<"Account not found. Register first.\n"; return false;
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+       33:  575:}
+call    0 returned 31
+call    1 returned 33
+call    2 returned 33
+call    3 never executed
+call    4 never executed
+call    5 never executed
+function _Z12cancelTicketRSt6vectorI7BookingSaIS0_EERKS_I5TrainSaIS4_EE called 7 returned 100% blocks executed 70%
+        7:  576:void cancelTicket(vector<Booking>& bookings, const vector<Train>& /*trains*/) {
+      23*:  577:    cout<<"\n--- Cancel Ticket / Refund ---\n"; long long pnr=0; string input=readLine("Enter PNR: "); try{size_t n=0;pnr=stoll(input,&n);if(n!=input.size())throw 1;}catch(...){cout<<"Invalid PNR.\n";return;}
+call    0 returned 7
+branch  1 taken 7 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 7
+branch  4 taken 7 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 7
+branch  7 taken 7 (fallthrough)
+branch  8 taken 0 (throw)
+call    9 returned 7
+call   10 returned 7
+branch 11 taken 5 (fallthrough)
+branch 12 taken 2 (throw)
+call   13 returned 5
+branch 14 taken 0 (fallthrough)
+branch 15 taken 5
+call   16 never executed
+call   17 never executed
+call   18 never executed
+call   19 returned 2
+call   20 returned 2
+branch 21 taken 2 (fallthrough)
+branch 22 taken 0 (throw)
+call   23 returned 2
+branch 24 taken 2 (fallthrough)
+branch 25 taken 0 (throw)
+call   26 never executed
+        6:  578:    for(auto &b:bookings) if(b.pnr==pnr){
+call    0 returned 5
+call    1 returned 5
+call    2 returned 6
+branch  3 taken 5 (fallthrough)
+branch  4 taken 1
+call    5 returned 1
+call    6 returned 6
+branch  7 taken 6
+branch  8 taken 0 (fallthrough)
+        9:  579:        if(!isAdmin && !b.ownerContact.empty() && b.ownerContact!=currentUserContact){cout<<"This booking does not belong to your account.\n";return;}
+branch  0 taken 5 (fallthrough)
+branch  1 taken 0
+call    2 returned 5
+branch  3 taken 5 (fallthrough)
+branch  4 taken 0
+call    5 returned 5
+branch  6 taken 1 (fallthrough)
+branch  7 taken 4
+branch  8 taken 1 (fallthrough)
+branch  9 taken 4
+call   10 returned 1
+branch 11 taken 1 (fallthrough)
+branch 12 taken 0 (throw)
+        4:  580:        if(b.status!="CONFIRMED"){cout<<"This PNR is already cancelled or not active. No changes made.\n";return;}
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 2 (fallthrough)
+branch  4 taken 2
+call    5 returned 2
+branch  6 taken 2 (fallthrough)
+branch  7 taken 0 (throw)
+        2:  581:        double charge=b.fare*0.10; b.refund=b.fare-charge; b.status="CANCELLED";
+call    0 returned 2
+branch  1 taken 2 (fallthrough)
+branch  2 taken 0 (throw)
+       2*:  582:        if(!saveBookings(bookings)){b.status="CONFIRMED";b.refund=0;cout<<"Could not save cancellation.\n";return;}
+call    0 returned 2
+branch  1 taken 2 (fallthrough)
+branch  2 taken 0 (throw)
+branch  3 taken 0 (fallthrough)
+branch  4 taken 2
+call    5 never executed
+branch  6 never executed (fallthrough)
+branch  7 never executed (throw)
+call    8 never executed
+branch  9 never executed (fallthrough)
+branch 10 never executed (throw)
+        6:  583:        audit("BOOKING_CANCELLED_REFUND",pnr,b.trainNumber); cout<<"Cancellation successful. Seats have been restored.\nCancellation charge (10% demo policy): Rs. "<<fixed<<setprecision(2)<<charge<<"\nRefund status: REFUND_PENDING (simulated)\nRefund amount: Rs. "<<b.refund<<"\n";return;
+call    0 returned 2
+branch  1 taken 2 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 2
+branch  4 taken 2 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 2
+call    7 returned 2
+branch  8 taken 2 (fallthrough)
+branch  9 taken 0 (throw)
+call   10 returned 2
+branch 11 taken 2 (fallthrough)
+branch 12 taken 0 (throw)
+call   13 returned 2
+call   14 returned 2
+call   15 returned 2
+branch 16 taken 2 (fallthrough)
+branch 17 taken 0 (throw)
+call   18 returned 2
+branch 19 taken 2 (fallthrough)
+branch 20 taken 0 (throw)
+call   21 returned 2
+branch 22 taken 2 (fallthrough)
+branch 23 taken 0 (throw)
+call   24 returned 2
+branch 25 taken 2 (fallthrough)
+branch 26 taken 0 (throw)
+call   27 never executed
+    #####:  584:    } cout<<"PNR not found.\n";
+call    0 never executed
+branch  1 never executed (fallthrough)
+branch  2 never executed (throw)
+       7*:  585:}
+call    0 returned 7
+branch  1 taken 0 (fallthrough)
+branch  2 taken 7
+call    3 never executed
+function _Z14bookingHistoryRKSt6vectorI7BookingSaIS0_EERKS_I5TrainSaIS5_EE called 6 returned 100% blocks executed 55%
+        6:  586:void bookingHistory(const vector<Booking>& bookings,const vector<Train>& /*trains*/){
+        6:  587:    cout<<"\n--- My Booking History ---\n"; bool found=false;
+call    0 returned 6
+      10*:  588:    for(const auto&b:bookings) if(isAdmin || b.ownerContact==currentUserContact || (b.ownerContact.empty() && lowerCopy(b.passenger)==lowerCopy(currentUserName))){
+call    0 returned 6
+call    1 returned 6
+call    2 returned 4
+branch  3 taken 4 (fallthrough)
+branch  4 taken 0
+call    5 returned 4
+branch  6 taken 0 (fallthrough)
+branch  7 taken 4
+call    8 never executed
+branch  9 never executed (fallthrough)
+branch 10 never executed
+call   11 never executed
+branch 12 never executed (fallthrough)
+branch 13 never executed (throw)
+call   14 never executed
+branch 15 never executed (fallthrough)
+branch 16 never executed (throw)
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+call   23 never executed
+branch 24 never executed (fallthrough)
+branch 25 never executed
+branch 26 taken 0 (fallthrough)
+branch 27 taken 4
+call   28 never executed
+branch 29 taken 0 (fallthrough)
+branch 30 taken 4
+call   31 never executed
+branch 32 taken 0 (fallthrough)
+branch 33 taken 4
+call   34 never executed
+branch 35 taken 0 (fallthrough)
+branch 36 taken 4
+call   37 never executed
+branch 38 taken 4 (fallthrough)
+branch 39 taken 0
+call   40 returned 4
+call   41 returned 10
+branch 42 taken 4
+branch 43 taken 6 (fallthrough)
+branch 44 never executed (fallthrough)
+branch 45 never executed
+call   46 never executed
+branch 47 never executed (fallthrough)
+branch 48 never executed
+call   49 never executed
+branch 50 never executed (fallthrough)
+branch 51 never executed
+call   52 never executed
+branch 53 never executed (fallthrough)
+branch 54 never executed
+call   55 never executed
+        4:  589:        found=true; cout<<"PNR "<<b.pnr<<" | Train "<<b.trainNumber<<" | "<<b.trainDate<<" | "<<b.className<<" | "<<b.status<<" | Rs."<<fixed<<setprecision(2)<<b.fare<<"\n";
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 4
+branch  4 taken 4 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 4
+branch  7 taken 4 (fallthrough)
+branch  8 taken 0 (throw)
+call    9 returned 4
+branch 10 taken 4 (fallthrough)
+branch 11 taken 0 (throw)
+call   12 returned 4
+branch 13 taken 4 (fallthrough)
+branch 14 taken 0 (throw)
+call   15 returned 4
+branch 16 taken 4 (fallthrough)
+branch 17 taken 0 (throw)
+call   18 returned 4
+branch 19 taken 4 (fallthrough)
+branch 20 taken 0 (throw)
+call   21 returned 4
+branch 22 taken 4 (fallthrough)
+branch 23 taken 0 (throw)
+call   24 returned 4
+branch 25 taken 4 (fallthrough)
+branch 26 taken 0 (throw)
+call   27 returned 4
+branch 28 taken 4 (fallthrough)
+branch 29 taken 0 (throw)
+call   30 returned 4
+branch 31 taken 4 (fallthrough)
+branch 32 taken 0 (throw)
+call   33 returned 4
+branch 34 taken 4 (fallthrough)
+branch 35 taken 0 (throw)
+call   36 returned 4
+call   37 returned 4
+call   38 returned 4
+branch 39 taken 4 (fallthrough)
+branch 40 taken 0 (throw)
+call   41 returned 4
+branch 42 taken 4 (fallthrough)
+branch 43 taken 0 (throw)
+        6:  590:    } if(!found)cout<<"No bookings found for this account.\n";
+branch  0 taken 2 (fallthrough)
+branch  1 taken 4
+call    2 returned 2
+        6:  591:}
+function _Z9adminMenuRSt6vectorI5TrainSaIS0_EERS_I7BookingSaIS4_EE called 2 returned 100% blocks executed 52%
+        2:  592:void adminMenu(vector<Train>& trains, vector<Booking>& bookings){
+       2*:  593:    if(!isAdmin){cout<<"Access denied: administrator login required.\n";return;}
+branch  0 taken 0 (fallthrough)
+branch  1 taken 2
+call    2 never executed
+       36:  594:    while(true){cout<<"\n--- Administration ---\n1. Add train\n2. Update train route/timings/fares\n3. Remove train\n4. Configure seat inventory\n5. Occupancy/revenue report\n0. Back\n";int c=readInt("Choose: ",0,5);if(c==0)return;
+call    0 returned 12
+call    1 returned 12
+branch  2 taken 12 (fallthrough)
+branch  3 taken 0 (throw)
+call    4 returned 12
+branch  5 taken 12 (fallthrough)
+branch  6 taken 0 (throw)
+call    7 returned 12
+branch  8 taken 2 (fallthrough)
+branch  9 taken 10
+call   10 never executed
+call   11 never executed
+function _ZZ9adminMenuRSt6vectorI5TrainSaIS0_EERS_I7BookingSaIS4_EEENKUlRKS0_E_clES9_ called 82 returned 100% blocks executed 100%
+     128*:  595:        if(c==1){Train t; t.number=readInt("Train number: ",1,999999);if(any_of(trains.begin(),trains.end(),[&](const Train&x){return x.number==t.number;})){cout<<"Train number already exists.\n";continue;}t.name=readLine("Train name: ");t.source=readLine("Source: ");t.destination=readLine("Destination: ");t.departure=readLine("Departure (HH:MM): ");t.arrival=readLine("Arrival (HH:MM): ");t.sleeperTotal=readInt("Sleeper seats: ",0,100000);t.acTotal=readInt("AC seats: ",0,100000);t.generalTotal=readInt("General seats: ",0,100000);cout<<"Fares per seat:\n";string a; // use numeric text helper via stringstream
+branch  0 taken 2 (fallthrough)
+branch  1 taken 8
+call    2 returned 2
+call    3 returned 2
+branch  4 taken 2 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 2
+branch  7 taken 2 (fallthrough)
+branch  8 taken 0 (throw)
+call    9 returned 2
+call   10 returned 2
+call   11 returned 2
+call   12 returned 2
+branch 13 taken 2 (fallthrough)
+branch 14 taken 0 (throw)
+branch 15 taken 0 (fallthrough)
+branch 16 taken 2
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+call   20 returned 2
+branch 21 taken 2 (fallthrough)
+branch 22 taken 0 (throw)
+call   23 returned 2
+branch 24 taken 2 (fallthrough)
+branch 25 taken 0 (throw)
+call   26 returned 2
+call   27 returned 2
+call   28 returned 2
+call   29 returned 2
+branch 30 taken 2 (fallthrough)
+branch 31 taken 0 (throw)
+call   32 returned 2
+branch 33 taken 2 (fallthrough)
+branch 34 taken 0 (throw)
+call   35 returned 2
+call   36 returned 2
+call   37 returned 2
+call   38 returned 2
+branch 39 taken 2 (fallthrough)
+branch 40 taken 0 (throw)
+call   41 returned 2
+branch 42 taken 2 (fallthrough)
+branch 43 taken 0 (throw)
+call   44 returned 2
+call   45 returned 2
+call   46 returned 2
+call   47 returned 2
+branch 48 taken 2 (fallthrough)
+branch 49 taken 0 (throw)
+call   50 returned 2
+branch 51 taken 2 (fallthrough)
+branch 52 taken 0 (throw)
+call   53 returned 2
+call   54 returned 2
+call   55 returned 2
+call   56 returned 2
+branch 57 taken 2 (fallthrough)
+branch 58 taken 0 (throw)
+call   59 returned 2
+branch 60 taken 2 (fallthrough)
+branch 61 taken 0 (throw)
+call   62 returned 2
+call   63 returned 2
+call   64 returned 2
+call   65 returned 2
+branch 66 taken 2 (fallthrough)
+branch 67 taken 0 (throw)
+call   68 returned 2
+branch 69 taken 2 (fallthrough)
+branch 70 taken 0 (throw)
+call   71 returned 2
+call   72 returned 2
+branch 73 taken 2 (fallthrough)
+branch 74 taken 0 (throw)
+call   75 returned 2
+branch 76 taken 2 (fallthrough)
+branch 77 taken 0 (throw)
+call   78 returned 2
+call   79 returned 2
+branch 80 taken 2 (fallthrough)
+branch 81 taken 0 (throw)
+call   82 returned 2
+branch 83 taken 2 (fallthrough)
+branch 84 taken 0 (throw)
+call   85 returned 2
+call   86 returned 2
+branch 87 taken 2 (fallthrough)
+branch 88 taken 0 (throw)
+call   89 returned 2
+call   90 never executed
+call   91 never executed
+call   92 never executed
+call   93 never executed
+call   94 never executed
+call   95 never executed
+call   96 never executed
+call   97 never executed
+call   98 never executed
+function _ZZ9adminMenuRSt6vectorI5TrainSaIS0_EERS_I7BookingSaIS4_EEENKUlRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEE_clESF_ called 6 returned 100% blocks executed 57%
+      28*:  596:            auto fare=[&](const string&label){while(true){string v=readLine(label);try{size_t n;double d=stod(v,&n);if(n==v.size()&&d>=0&&d<=1000000)return d;}catch(...){}cout<<"Enter a valid non-negative fare.\n";}};t.sleeperFare=fare("Sleeper fare: ");t.acFare=fare("AC fare: ");t.generalFare=fare("General fare: ");trains.push_back(t);if(saveTrains(trains)){audit("ADMIN_ADD_TRAIN",0,t.number);cout<<"Train added.\n";}else{trains.pop_back();cout<<"Could not save train.\n";}}
+call    0 returned 2
+branch  1 taken 2 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 2
+branch  4 taken 2 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 2
+call    7 returned 2
+branch  8 taken 2 (fallthrough)
+branch  9 taken 0 (throw)
+call   10 returned 2
+branch 11 taken 2 (fallthrough)
+branch 12 taken 0 (throw)
+call   13 returned 2
+call   14 returned 2
+branch 15 taken 2 (fallthrough)
+branch 16 taken 0 (throw)
+call   17 returned 2
+branch 18 taken 2 (fallthrough)
+branch 19 taken 0 (throw)
+call   20 returned 2
+call   21 returned 2
+branch 22 taken 2 (fallthrough)
+branch 23 taken 0 (throw)
+call   24 returned 2
+branch 25 taken 2 (fallthrough)
+branch 26 taken 0 (throw)
+branch 27 taken 2 (fallthrough)
+branch 28 taken 0
+call   29 returned 2
+branch 30 taken 2 (fallthrough)
+branch 31 taken 0 (throw)
+call   32 returned 2
+branch 33 taken 2 (fallthrough)
+branch 34 taken 0 (throw)
+call   35 returned 2
+call   36 returned 2
+branch 37 taken 2 (fallthrough)
+branch 38 taken 0 (throw)
+call   39 never executed
+call   40 never executed
+branch 41 never executed (fallthrough)
+branch 42 never executed (throw)
+call   43 returned 2
+call   44 returned 2
+branch 45 taken 2 (fallthrough)
+branch 46 taken 0
+call   47 never executed
+call   48 never executed
+call   49 never executed
+call   50 never executed
+call   51 never executed
+call   52 never executed
+call   53 returned 6
+branch 54 taken 6 (fallthrough)
+branch 55 taken 0 (throw)
+call   56 returned 6
+branch 57 taken 6 (fallthrough)
+branch 58 taken 0 (throw)
+call   59 returned 6
+branch 60 taken 6 (fallthrough)
+branch 61 taken 0
+branch 62 taken 6 (fallthrough)
+branch 63 taken 0
+branch 64 taken 6 (fallthrough)
+branch 65 taken 0
+branch 66 taken 6 (fallthrough)
+branch 67 taken 0
+call   68 never executed
+branch 69 never executed (fallthrough)
+branch 70 never executed (throw)
+call   71 returned 6
+branch 72 taken 0 (fallthrough)
+branch 73 taken 6
+call   74 never executed
+call   75 never executed
+branch 76 never executed (fallthrough)
+branch 77 never executed (throw)
+call   78 never executed
+function _ZZ9adminMenuRSt6vectorI5TrainSaIS0_EERS_I7BookingSaIS4_EEENKUlRKS0_E0_clES9_ called 252 returned 100% blocks executed 100%
+     272*:  597:        else if(c==2||c==3||c==4){int no=readInt("Train number: ",1,999999);auto it=find_if(trains.begin(),trains.end(),[&](const Train&t){return t.number==no;});if(it==trains.end()){cout<<"Train not found.\n";continue;}
+branch  0 taken 6 (fallthrough)
+branch  1 taken 2
+branch  2 taken 4 (fallthrough)
+branch  3 taken 2
+branch  4 taken 2 (fallthrough)
+branch  5 taken 2
+call    6 returned 6
+branch  7 taken 6 (fallthrough)
+branch  8 taken 0 (throw)
+call    9 returned 6
+branch 10 taken 6 (fallthrough)
+branch 11 taken 0 (throw)
+call   12 returned 6
+call   13 returned 6
+call   14 returned 6
+call   15 returned 6
+branch 16 taken 6 (fallthrough)
+branch 17 taken 0 (throw)
+call   18 returned 6
+call   19 returned 6
+branch 20 taken 0 (fallthrough)
+branch 21 taken 6
+call   22 never executed
+branch 23 never executed (fallthrough)
+branch 24 never executed (throw)
+call   25 never executed
+function _ZZ9adminMenuRSt6vectorI5TrainSaIS0_EERS_I7BookingSaIS4_EEENKUlRKS4_E_clES9_ called 2 returned 100% blocks executed 57%
+      12*:  598:            if(c==3){if(any_of(bookings.begin(),bookings.end(),[&](const Booking&b){return b.trainNumber==no&&b.status=="CONFIRMED";})){cout<<"Cannot remove a train with confirmed bookings.\n";continue;}Train old=*it;trains.erase(it);if(!saveTrains(trains)){trains.push_back(old);cout<<"Could not save removal.\n";}else{audit("ADMIN_REMOVE_TRAIN",0,no);cout<<"Train removed.\n";}}
+branch  0 taken 2 (fallthrough)
+branch  1 taken 4
+call    2 returned 2
+call    3 returned 2
+call    4 returned 2
+branch  5 taken 2 (fallthrough)
+branch  6 taken 0 (throw)
+branch  7 taken 0 (fallthrough)
+branch  8 taken 2
+call    9 never executed
+branch 10 never executed (fallthrough)
+branch 11 never executed (throw)
+call   12 returned 2
+call   13 returned 2
+branch 14 taken 2 (fallthrough)
+branch 15 taken 0 (throw)
+call   16 returned 2
+call   17 returned 2
+branch 18 taken 2 (fallthrough)
+branch 19 taken 0 (throw)
+call   20 returned 2
+branch 21 taken 2 (fallthrough)
+branch 22 taken 0 (throw)
+branch 23 taken 0 (fallthrough)
+branch 24 taken 2
+call   25 never executed
+branch 26 never executed (fallthrough)
+branch 27 never executed (throw)
+call   28 never executed
+branch 29 never executed (fallthrough)
+branch 30 never executed (throw)
+call   31 returned 2
+branch 32 taken 2 (fallthrough)
+branch 33 taken 0 (throw)
+call   34 returned 2
+branch 35 taken 2 (fallthrough)
+branch 36 taken 0 (throw)
+call   37 returned 2
+call   38 returned 2
+branch 39 taken 2 (fallthrough)
+branch 40 taken 0 (throw)
+call   41 returned 2
+call   42 never executed
+call   43 never executed
+branch 44 taken 0 (fallthrough)
+branch 45 taken 2
+call   46 never executed
+branch 47 never executed (fallthrough)
+branch 48 never executed
+       24:  599:            else if(c==4){int sl=readInt("New Sleeper capacity: ",0,100000),ac=readInt("New AC capacity: ",0,100000),gn=readInt("New General capacity: ",0,100000);if(sl<bookedSeats(bookings,no,"", "Sleeper")){} // date-specific checks below are performed on booked records
+branch  0 taken 2 (fallthrough)
+branch  1 taken 2
+call    2 returned 2
+branch  3 taken 2 (fallthrough)
+branch  4 taken 0 (throw)
+call    5 returned 2
+branch  6 taken 2 (fallthrough)
+branch  7 taken 0 (throw)
+call    8 returned 2
+call    9 returned 2
+branch 10 taken 2 (fallthrough)
+branch 11 taken 0 (throw)
+call   12 returned 2
+branch 13 taken 2 (fallthrough)
+branch 14 taken 0 (throw)
+call   15 returned 2
+call   16 returned 2
+branch 17 taken 2 (fallthrough)
+branch 18 taken 0 (throw)
+call   19 returned 2
+branch 20 taken 2 (fallthrough)
+branch 21 taken 0 (throw)
+call   22 returned 2
+call   23 returned 2
+branch 24 taken 2 (fallthrough)
+branch 25 taken 0 (throw)
+call   26 returned 2
+branch 27 taken 2 (fallthrough)
+branch 28 taken 0 (throw)
+call   29 returned 2
+branch 30 taken 2 (fallthrough)
+branch 31 taken 0 (throw)
+call   32 returned 2
+call   33 returned 2
+call   34 never executed
+call   35 never executed
+call   36 never executed
+call   37 never executed
+call   38 never executed
+       8*:  600:                int maxSL=0,maxAC=0,maxGN=0;for(const auto&b:bookings)if(b.trainNumber==no&&b.status=="CONFIRMED"){if(b.className=="Sleeper")maxSL=max(maxSL,bookedSeats(bookings,no,b.trainDate,"Sleeper"));if(b.className=="AC")maxAC=max(maxAC,bookedSeats(bookings,no,b.trainDate,"AC"));if(b.className=="General")maxGN=max(maxGN,bookedSeats(bookings,no,b.trainDate,"General"));}if(sl<maxSL||ac<maxAC||gn<maxGN){cout<<"Capacity cannot be lower than already booked seats for any journey date.\n";continue;}int osl=it->sleeperTotal,oac=it->acTotal,ogn=it->generalTotal;it->sleeperTotal=sl;it->acTotal=ac;it->generalTotal=gn;if(saveTrains(trains)){audit("ADMIN_UPDATE_INVENTORY",0,no);cout<<"Inventory updated.\n";}else{it->sleeperTotal=osl;it->acTotal=oac;it->generalTotal=ogn;cout<<"Could not save inventory.\n";}}
+call    0 returned 2
+call    1 returned 2
+call    2 returned 2
+branch  3 taken 0 (fallthrough)
+branch  4 taken 2
+call    5 never executed
+branch  6 never executed (fallthrough)
+branch  7 never executed (throw)
+branch  8 never executed (fallthrough)
+branch  9 never executed
+branch 10 taken 0 (fallthrough)
+branch 11 taken 2
+call   12 never executed
+branch 13 never executed (fallthrough)
+branch 14 never executed (throw)
+branch 15 never executed (fallthrough)
+branch 16 never executed
+call   17 never executed
+branch 18 never executed (fallthrough)
+branch 19 never executed (throw)
+call   20 never executed
+branch 21 never executed (fallthrough)
+branch 22 never executed (throw)
+call   23 never executed
+call   24 never executed
+call   25 never executed
+branch 26 never executed (fallthrough)
+branch 27 never executed (throw)
+branch 28 never executed (fallthrough)
+branch 29 never executed
+call   30 never executed
+branch 31 never executed (fallthrough)
+branch 32 never executed (throw)
+call   33 never executed
+branch 34 never executed (fallthrough)
+branch 35 never executed (throw)
+call   36 never executed
+call   37 never executed
+call   38 never executed
+branch 39 never executed (fallthrough)
+branch 40 never executed (throw)
+branch 41 never executed (fallthrough)
+branch 42 never executed
+call   43 never executed
+branch 44 never executed (fallthrough)
+branch 45 never executed (throw)
+call   46 never executed
+branch 47 never executed (fallthrough)
+branch 48 never executed (throw)
+call   49 never executed
+call   50 never executed
+call   51 returned 2
+call   52 returned 4
+branch 53 taken 2
+branch 54 taken 2 (fallthrough)
+branch 55 taken 2 (fallthrough)
+branch 56 taken 0
+branch 57 taken 2 (fallthrough)
+branch 58 taken 0
+branch 59 taken 0 (fallthrough)
+branch 60 taken 2
+call   61 never executed
+branch 62 never executed (fallthrough)
+branch 63 never executed (throw)
+call   64 returned 2
+call   65 returned 2
+call   66 returned 2
+call   67 returned 2
+call   68 returned 2
+call   69 returned 2
+call   70 returned 2
+branch 71 taken 2 (fallthrough)
+branch 72 taken 0 (throw)
+branch 73 taken 2 (fallthrough)
+branch 74 taken 0
+call   75 returned 2
+branch 76 taken 2 (fallthrough)
+branch 77 taken 0 (throw)
+call   78 returned 2
+branch 79 taken 2 (fallthrough)
+branch 80 taken 0 (throw)
+call   81 returned 2
+call   82 returned 2
+branch 83 taken 2 (fallthrough)
+branch 84 taken 0 (throw)
+call   85 never executed
+call   86 never executed
+call   87 never executed
+call   88 never executed
+branch 89 never executed (fallthrough)
+branch 90 never executed (throw)
+call   91 never executed
+call   92 never executed
+call   93 never executed
+call   94 never executed
+      28*:  601:            else{it->name=readLine("Train name: ");it->source=readLine("Source: ");it->destination=readLine("Destination: ");it->departure=readLine("Departure (HH:MM): ");it->arrival=readLine("Arrival (HH:MM): ");if(saveTrains(trains)){audit("ADMIN_UPDATE_TRAIN",0,no);cout<<"Train updated.\n";}else cout<<"Could not save changes.\n";}}
+call    0 returned 2
+branch  1 taken 2 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 2
+branch  4 taken 2 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 2
+call    7 returned 2
+call    8 returned 2
+call    9 returned 2
+call   10 returned 2
+branch 11 taken 2 (fallthrough)
+branch 12 taken 0 (throw)
+call   13 returned 2
+branch 14 taken 2 (fallthrough)
+branch 15 taken 0 (throw)
+call   16 returned 2
+call   17 returned 2
+call   18 returned 2
+call   19 returned 2
+call   20 returned 2
+branch 21 taken 2 (fallthrough)
+branch 22 taken 0 (throw)
+call   23 returned 2
+branch 24 taken 2 (fallthrough)
+branch 25 taken 0 (throw)
+call   26 returned 2
+call   27 returned 2
+call   28 returned 2
+call   29 returned 2
+call   30 returned 2
+branch 31 taken 2 (fallthrough)
+branch 32 taken 0 (throw)
+call   33 returned 2
+branch 34 taken 2 (fallthrough)
+branch 35 taken 0 (throw)
+call   36 returned 2
+call   37 returned 2
+call   38 returned 2
+call   39 returned 2
+call   40 returned 2
+branch 41 taken 2 (fallthrough)
+branch 42 taken 0 (throw)
+call   43 returned 2
+branch 44 taken 2 (fallthrough)
+branch 45 taken 0 (throw)
+call   46 returned 2
+call   47 returned 2
+call   48 returned 2
+call   49 returned 2
+call   50 returned 2
+branch 51 taken 2 (fallthrough)
+branch 52 taken 0 (throw)
+branch 53 taken 2 (fallthrough)
+branch 54 taken 0
+call   55 returned 2
+branch 56 taken 2 (fallthrough)
+branch 57 taken 0 (throw)
+call   58 returned 2
+branch 59 taken 2 (fallthrough)
+branch 60 taken 0 (throw)
+call   61 returned 2
+call   62 returned 2
+branch 63 taken 2 (fallthrough)
+branch 64 taken 0 (throw)
+call   65 never executed
+branch 66 never executed (fallthrough)
+branch 67 never executed (throw)
+call   68 never executed
+call   69 never executed
+call   70 never executed
+call   71 never executed
+call   72 never executed
+call   73 never executed
+      96*:  602:        else if(c==5){int no=readInt("Train number (0 for all trains): ",0,999999);string from=readDate(),to=readDate();if(to<from){cout<<"End date must be on/after start date.\n";continue;}double revenue=0;int seats=0,capacity=0;for(const auto&b:bookings)if((no==0||b.trainNumber==no)&&b.trainDate>=from&&b.trainDate<=to){if(b.status=="CONFIRMED"){revenue+=b.fare;seats+=b.seats;}else revenue+=(b.fare-b.refund);}for(const auto&t:trains)if(no==0||t.number==no)capacity+=t.sleeperTotal+t.acTotal+t.generalTotal;cout<<"\nReport period: "<<from<<" to "<<to<<"\nConfirmed seats sold: "<<seats<<"\nNet revenue after simulated refunds: Rs. "<<fixed<<setprecision(2)<<revenue<<"\nConfigured seat capacity (per train, not date-specific): "<<capacity<<"\n";audit("ADMIN_REPORT",0,no);}
+branch  0 taken 2 (fallthrough)
+branch  1 taken 0
+call    2 returned 2
+branch  3 taken 2 (fallthrough)
+branch  4 taken 0 (throw)
+call    5 returned 2
+branch  6 taken 2 (fallthrough)
+branch  7 taken 0 (throw)
+call    8 returned 2
+call    9 returned 2
+branch 10 taken 2 (fallthrough)
+branch 11 taken 0 (throw)
+call   12 returned 2
+branch 13 taken 2 (fallthrough)
+branch 14 taken 0 (throw)
+call   15 returned 2
+branch 16 taken 0 (fallthrough)
+branch 17 taken 2
+call   18 never executed
+branch 19 never executed (fallthrough)
+branch 20 never executed (throw)
+call   21 returned 2
+call   22 returned 2
+call   23 returned 2
+branch 24 taken 2 (fallthrough)
+branch 25 taken 0
+branch 26 taken 0 (fallthrough)
+branch 27 taken 2
+call   28 never executed
+branch 29 never executed (fallthrough)
+branch 30 never executed
+call   31 never executed
+branch 32 never executed (fallthrough)
+branch 33 never executed
+branch 34 taken 0 (fallthrough)
+branch 35 taken 2
+call   36 never executed
+branch 37 never executed (fallthrough)
+branch 38 never executed (throw)
+branch 39 never executed (fallthrough)
+branch 40 never executed
+call   41 returned 2
+call   42 returned 4
+branch 43 taken 2
+branch 44 taken 2 (fallthrough)
+call   45 returned 2
+call   46 returned 2
+call   47 returned 84
+branch 48 taken 84 (fallthrough)
+branch 49 taken 0
+branch 50 taken 2 (fallthrough)
+branch 51 taken 82
+call   52 returned 84
+call   53 returned 86
+branch 54 taken 84
+branch 55 taken 2 (fallthrough)
+call   56 returned 2
+branch 57 taken 2 (fallthrough)
+branch 58 taken 0 (throw)
+call   59 returned 2
+branch 60 taken 2 (fallthrough)
+branch 61 taken 0 (throw)
+call   62 returned 2
+branch 63 taken 2 (fallthrough)
+branch 64 taken 0 (throw)
+call   65 returned 2
+branch 66 taken 2 (fallthrough)
+branch 67 taken 0 (throw)
+call   68 returned 2
+branch 69 taken 2 (fallthrough)
+branch 70 taken 0 (throw)
+call   71 returned 2
+branch 72 taken 2 (fallthrough)
+branch 73 taken 0 (throw)
+call   74 returned 2
+branch 75 taken 2 (fallthrough)
+branch 76 taken 0 (throw)
+call   77 returned 2
+branch 78 taken 2 (fallthrough)
+branch 79 taken 0 (throw)
+call   80 returned 2
+call   81 returned 2
+call   82 returned 2
+branch 83 taken 2 (fallthrough)
+branch 84 taken 0 (throw)
+call   85 returned 2
+branch 86 taken 2 (fallthrough)
+branch 87 taken 0 (throw)
+call   88 returned 2
+branch 89 taken 2 (fallthrough)
+branch 90 taken 0 (throw)
+call   91 returned 2
+branch 92 taken 2 (fallthrough)
+branch 93 taken 0 (throw)
+call   94 returned 2
+branch 95 taken 2 (fallthrough)
+branch 96 taken 0 (throw)
+call   97 returned 2
+branch 98 taken 2 (fallthrough)
+branch 99 taken 0 (throw)
+call   100 returned 2
+call   101 returned 2
+branch 102 taken 2 (fallthrough)
+branch 103 taken 0
+call   104 returned 2
+branch 105 taken 2 (fallthrough)
+branch 106 taken 0
+call   107 never executed
+call   108 never executed
+call   109 never executed
+call   110 never executed
+       10:  603:    }
+        -:  604:}
+        -:  605:
+function main called 40 returned 100% blocks executed 74%
+       40:  606:int main() {
+       40:  607:    vector<Train> trains=loadTrains(); vector<Booking> bookings=loadBookings();
+call    0 returned 40
+branch  1 taken 40 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 40
+branch  4 taken 40 (fallthrough)
+branch  5 taken 0 (throw)
+        -:  608:    cout << "========================================\n RAILWAY RESERVATION SYSTEM - SPRINT 2\n========================================\n"
+       40:  609:         << "Demo data only; payment/refunds are simulated. Admin login: admin / Railway@123\n";
+call    0 returned 40
+branch  1 taken 40 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 40
+branch  4 taken 40 (fallthrough)
+branch  5 taken 0 (throw)
+        -:  610:    while(true){
+       86:  611:        cout<<"\nWelcome Menu\n1. Register passenger\n2. Login\n3. Search trains (guest)\n4. View all trains (guest)\n5. View cities/stations\n0. Exit\n";
+call    0 returned 86
+branch  1 taken 86 (fallthrough)
+branch  2 taken 0 (throw)
+      172:  612:        int c=readInt("Choose: ",0,5); if(c==0)break;
+call    0 returned 86
+branch  1 taken 86 (fallthrough)
+branch  2 taken 0 (throw)
+call    3 returned 86
+branch  4 taken 86 (fallthrough)
+branch  5 taken 0 (throw)
+call    6 returned 86
+branch  7 taken 40 (fallthrough)
+branch  8 taken 46
+call    9 never executed
+       46:  613:        if(c==1)registerUser();
+branch  0 taken 9 (fallthrough)
+branch  1 taken 37
+call    2 returned 9
+branch  3 taken 9 (fallthrough)
+branch  4 taken 0 (throw)
+     149*:  614:        else if(c==2){if(!loginUser())continue;while(true){cout<<"\nAccount Menu ("<<currentUserName<<")\n1. Search trains\n2. Book ticket\n3. Check PNR/refund status\n4. Cancel ticket\n5. My booking history\n";if(isAdmin)cout<<"6. Administration\n";cout<<"9. Logout\n";int maxOpt=isAdmin?9:9;int a=readInt("Choose: ",1,maxOpt);if(a==9){currentUserName="";currentUserContact="";isAdmin=false;break;}if(a==1)searchMenu(trains,bookings);else if(a==2){if(isAdmin)cout<<"Admin accounts cannot make passenger bookings.\n";else bookMenu(trains,bookings);}else if(a==3)checkPNR(bookings,trains);else if(a==4)cancelTicket(bookings,trains);else if(a==5)bookingHistory(bookings,trains);else if(a==6&&isAdmin)adminMenu(trains,bookings);else cout<<"Invalid option for this account.\n";}
+branch  0 taken 33 (fallthrough)
+branch  1 taken 4
+call    2 returned 33
+branch  3 taken 33 (fallthrough)
+branch  4 taken 0 (throw)
+branch  5 taken 8 (fallthrough)
+branch  6 taken 25
+call    7 returned 56
+branch  8 taken 56 (fallthrough)
+branch  9 taken 0 (throw)
+call   10 returned 56
+branch 11 taken 56 (fallthrough)
+branch 12 taken 0 (throw)
+call   13 returned 56
+branch 14 taken 56 (fallthrough)
+branch 15 taken 0 (throw)
+branch 16 taken 4 (fallthrough)
+branch 17 taken 52
+call   18 returned 4
+branch 19 taken 4 (fallthrough)
+branch 20 taken 0 (throw)
+call   21 returned 56
+branch 22 taken 56 (fallthrough)
+branch 23 taken 0 (throw)
+call   24 returned 56
+branch 25 taken 56 (fallthrough)
+branch 26 taken 0 (throw)
+call   27 returned 56
+branch 28 taken 56 (fallthrough)
+branch 29 taken 0 (throw)
+call   30 returned 56
+branch 31 taken 25 (fallthrough)
+branch 32 taken 31
+call   33 returned 25
+branch 34 taken 25 (fallthrough)
+branch 35 taken 0 (throw)
+call   36 returned 25
+branch 37 taken 25 (fallthrough)
+branch 38 taken 0 (throw)
+branch 39 taken 0 (fallthrough)
+branch 40 taken 31
+call   41 never executed
+branch 42 never executed (fallthrough)
+branch 43 never executed (throw)
+branch 44 taken 8 (fallthrough)
+branch 45 taken 23
+branch 46 taken 0 (fallthrough)
+branch 47 taken 8
+call   48 never executed
+branch 49 never executed (fallthrough)
+branch 50 never executed (throw)
+call   51 returned 8
+branch 52 taken 8 (fallthrough)
+branch 53 taken 0 (throw)
+branch 54 taken 6 (fallthrough)
+branch 55 taken 17
+call   56 returned 6
+branch 57 taken 6 (fallthrough)
+branch 58 taken 0 (throw)
+branch 59 taken 7 (fallthrough)
+branch 60 taken 10
+call   61 returned 7
+branch 62 taken 7 (fallthrough)
+branch 63 taken 0 (throw)
+branch 64 taken 6 (fallthrough)
+branch 65 taken 4
+call   66 returned 6
+branch 67 taken 6 (fallthrough)
+branch 68 taken 0 (throw)
+branch 69 taken 4 (fallthrough)
+branch 70 taken 0
+branch 71 taken 2 (fallthrough)
+branch 72 taken 2
+call   73 returned 2
+branch 74 taken 2 (fallthrough)
+branch 75 taken 0 (throw)
+call   76 returned 2
+branch 77 taken 2 (fallthrough)
+branch 78 taken 0 (throw)
+call   79 never executed
+        -:  615:        }
+       4*:  616:        else if(c==3)searchMenu(trains,bookings);else if(c==4)viewAllTrains(trains,bookings);else if(c==5)viewAllDestinations(trains);
+branch  0 taken 4 (fallthrough)
+branch  1 taken 0
+call    2 returned 4
+branch  3 taken 4 (fallthrough)
+branch  4 taken 0 (throw)
+branch  5 never executed (fallthrough)
+branch  6 never executed
+call    7 never executed
+branch  8 never executed (fallthrough)
+branch  9 never executed (throw)
+branch 10 never executed (fallthrough)
+branch 11 never executed
+call   12 never executed
+branch 13 never executed (fallthrough)
+branch 14 never executed (throw)
+       46:  617:    }
+       40:  618:    cout<<"Thank you for using the Railway Reservation System.\n";return 0;
+call    0 returned 40
+branch  1 taken 40 (fallthrough)
+branch  2 taken 0 (throw)
+       40:  619:}
+call    0 returned 40
+call    1 returned 40
+call    2 never executed
+call    3 never executed

@@ -1,0 +1,89 @@
+========================================
+ RAILWAY RESERVATION SYSTEM - SPRINT 2
+========================================
+Demo data only; payment/refunds are simulated. Admin login: admin / Railway@123
+
+Welcome Menu
+1. Register passenger
+2. Login
+3. Search trains (guest)
+4. View all trains (guest)
+5. View cities/stations
+0. Exit
+Choose: 
+--- Login ---
+Contact/username (admin for administrator): Password: 
+Welcome, Alice QA.
+
+Account Menu (Alice QA)
+1. Search trains
+2. Book ticket
+3. Check PNR/refund status
+4. Cancel ticket
+5. My booking history
+9. Logout
+Choose: 
+--- Book Ticket ---
+Source station: Destination station: Journey date (YYYY-MM-DD): 
+Matching trains:
+
+Train 12627 - Karnataka Express
+Route: Bengaluru -> New Delhi | 19:20 - 10:30
+Journey date: 2026-11-06
+Class          Available    Fare/seat
+Sleeper               80        850.00
+AC                    32       2100.00
+General              100        420.00
+
+Train 22691 - Rajdhani Express
+Route: Bengaluru -> New Delhi | 20:00 - 05:50
+Journey date: 2026-11-06
+Class          Available    Fare/seat
+Sleeper                0          0.00
+AC                    48       2600.00
+General                0          0.00
+Enter train number: 
+Class: 1. Sleeper  2. AC  3. General
+Choose class: Number of seats (1-100): Passenger: Alice QA (registered account)
+Berth preference: 1. Lower  2. Middle  3. Upper  4. Window
+Choose preference: 
+Booking summary
+Train: Karnataka Express (12627)
+Class: General
+Seats: 1
+Fare: Rs. 420.00
+Payment mode: 1. Cash  2. Card  3. UPI
+Choose simulated payment mode: Confirm booking? (yes/no): 
+========================================
+          RAILWAY E-TICKET
+========================================
+PNR            : 1893602244
+Passenger      : Alice QA
+Train          : 12627 - Karnataka Express
+Route          : Bengaluru -> New Delhi
+Journey date   : 2026-11-06
+Timing         : 19:20 - 10:30
+Class          : General
+Seats          : 1
+Berth pref.    : Lower
+Payment mode   : Cash (simulated)
+Total fare     : Rs. 420.00
+Status         : CONFIRMED
+========================================
+
+Account Menu (Alice QA)
+1. Search trains
+2. Book ticket
+3. Check PNR/refund status
+4. Cancel ticket
+5. My booking history
+9. Logout
+Choose: 
+Welcome Menu
+1. Register passenger
+2. Login
+3. Search trains (guest)
+4. View all trains (guest)
+5. View cities/stations
+0. Exit
+Choose: Thank you for using the Railway Reservation System.

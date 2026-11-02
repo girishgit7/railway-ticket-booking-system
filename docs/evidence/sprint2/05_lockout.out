@@ -1,0 +1,73 @@
+========================================
+ RAILWAY RESERVATION SYSTEM - SPRINT 2
+========================================
+Demo data only; payment/refunds are simulated. Admin login: admin / Railway@123
+
+Welcome Menu
+1. Register passenger
+2. Login
+3. Search trains (guest)
+4. View all trains (guest)
+5. View cities/stations
+0. Exit
+Choose: 
+--- Passenger Registration ---
+Full name: Contact number (or username): Create password (minimum 6 characters): 
+Registration successful. Please log in.
+
+Welcome Menu
+1. Register passenger
+2. Login
+3. Search trains (guest)
+4. View all trains (guest)
+5. View cities/stations
+0. Exit
+Choose: 
+--- Login ---
+Contact/username (admin for administrator): Password: 
+Incorrect password. Failed attempts: 1/3
+
+Welcome Menu
+1. Register passenger
+2. Login
+3. Search trains (guest)
+4. View all trains (guest)
+5. View cities/stations
+0. Exit
+Choose: 
+--- Login ---
+Contact/username (admin for administrator): Password: 
+Incorrect password. Failed attempts: 2/3
+
+Welcome Menu
+1. Register passenger
+2. Login
+3. Search trains (guest)
+4. View all trains (guest)
+5. View cities/stations
+0. Exit
+Choose: 
+--- Login ---
+Contact/username (admin for administrator): Password: 
+Incorrect password. Failed attempts: 3/3 — account locked.
+
+Welcome Menu
+1. Register passenger
+2. Login
+3. Search trains (guest)
+4. View all trains (guest)
+5. View cities/stations
+0. Exit
+Choose: 
+--- Login ---
+Contact/username (admin for administrator): Password: 
+Account locked after 3 failed login attempts. Contact administrator.
+
+Welcome Menu
+1. Register passenger
+2. Login
+3. Search trains (guest)
+4. View all trains (guest)
+5. View cities/stations
+0. Exit
+Choose: Thank you for using the Railway Reservation System.
