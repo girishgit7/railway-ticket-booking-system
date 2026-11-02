@@ -1,0 +1,48 @@
+========================================
+ RAILWAY RESERVATION SYSTEM - SPRINT 2
+========================================
+Demo data only; payment/refunds are simulated. Admin login: admin / Railway@123
+
+Welcome Menu
+1. Register passenger
+2. Login
+3. Search trains (guest)
+4. View all trains (guest)
+5. View cities/stations
+0. Exit
+Choose: 
+--- Search Trains ---
+Source station: Destination station: Journey date (YYYY-MM-DD): Please use YYYY-MM-DD format (for example, 2026-11-05).
+Journey date (YYYY-MM-DD): 
+Train 12007 - Shatabdi Express
+Route: Bengaluru -> Chennai | 06:00 - 11:00
+Journey date: 2026-11-02
+Class          Available    Fare/seat
+Sleeper                0          0.00
+AC                    40        950.00
+General               60        280.00
+
+Train 16526 - Kanyakumari Express
+Route: Bengaluru -> Chennai | 20:10 - 04:45
+Journey date: 2026-11-02
+Class          Available    Fare/seat
+Sleeper               70        430.00
+AC                    20       1150.00
+General               90        220.00
+
+Train 12608 - Lalbagh Express
+Route: Bengaluru -> Chennai | 06:30 - 12:45
+Journey date: 2026-11-02
+Class          Available    Fare/seat
+Sleeper               70        390.00
+AC                    24        980.00
+General               90        210.00
+
+Welcome Menu
+1. Register passenger
+2. Login
+3. Search trains (guest)
+4. View all trains (guest)
+5. View cities/stations
+0. Exit
+Choose: Thank you for using the Railway Reservation System.

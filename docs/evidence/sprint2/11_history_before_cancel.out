@@ -1,0 +1,44 @@
+========================================
+ RAILWAY RESERVATION SYSTEM - SPRINT 2
+========================================
+Demo data only; payment/refunds are simulated. Admin login: admin / Railway@123
+
+Welcome Menu
+1. Register passenger
+2. Login
+3. Search trains (guest)
+4. View all trains (guest)
+5. View cities/stations
+0. Exit
+Choose: 
+--- Login ---
+Contact/username (admin for administrator): Password: 
+Welcome, Alice QA.
+
+Account Menu (Alice QA)
+1. Search trains
+2. Book ticket
+3. Check PNR/refund status
+4. Cancel ticket
+5. My booking history
+9. Logout
+Choose: 
+--- My Booking History ---
+PNR 1893602221 | Train 16526 | 2026-11-03 | General | CONFIRMED | Rs.440.00
+
+Account Menu (Alice QA)
+1. Search trains
+2. Book ticket
+3. Check PNR/refund status
+4. Cancel ticket
+5. My booking history
+9. Logout
+Choose: 
+Welcome Menu
+1. Register passenger
+2. Login
+3. Search trains (guest)
+4. View all trains (guest)
+5. View cities/stations
+0. Exit
+Choose: Thank you for using the Railway Reservation System.
