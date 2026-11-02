@@ -1,7 +1,9 @@
 # Sprint 2 Test Case Document
 
-**Tester:** Hanumantha L (PES2UG24CS179)  
-**Baseline:** `fc2c53227724ae2fd914a0d1c4fb4815c1ee2727`  
+**Tester:** Hanumantha L (PES2UG24CS179)
+**Baseline:** `fc2c53227724ae2fd914a0d1c4fb4815c1ee2727`
+**Application:** `railway_sprint2.cpp`
+**Environment:** Linux x86-64, GCC/G++ C++17
 **Evidence root:** `docs/evidence/sprint2/`
 
 Status meanings: **PASS** = executed with supporting evidence; **FAIL** = executed and requirement mismatch observed; **BLOCKED** = prerequisite/environment/measurement unavailable; **NOT TESTED** = outside executable scope or not attempted.
@@ -45,6 +47,6 @@ Status meanings: **PASS** = executed with supporting evidence; **FAIL** = execut
 | TC-Port-01 | RRS-NF-005 | Build/run Windows and Linux | Both platforms pass | Linux only in available environment | BLOCKED | Linux build evidence |
 | TC-Unit-01 | STP unit strategy | Isolated function tests via framework | Unit-level results | No separable unit-test target/framework in monolithic source | NOT TESTED | Architecture limitation |
 
-## Summary
+## Summary and counting method
 
-Executed cases passed except none in the executed scope. The two Sprint 1 regression cases passed against Sprint 2. The blocked/not-tested cases are explicitly not claimed as complete.
+There are **36 documented test cases** in this table: **31 PASS**, **4 BLOCKED**, and **1 NOT TESTED**. The executed-scenario count is different from the documented-case count because one CLI process can exercise several mapped test cases. The evidence contains **22 executed process scenarios**: **18** scenarios in the primary suite (`assertions.txt`) plus **4** supplemental scenarios (`supplement_assertions.txt`: Bob registration, Cash booking, Card booking, and cross-account cancellation). All 22 executed scenarios passed. The two Sprint 1 regression cases passed against Sprint 2. The four blocked and one not-tested cases are explicitly not claimed as complete.

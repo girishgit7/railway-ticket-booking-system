@@ -1,7 +1,10 @@
 # System Validation Report — Sprint 2
 
-**Tester:** Hanumantha L (PES2UG24CS179)  
-**Baseline:** `fc2c53227724ae2fd914a0d1c4fb4815c1ee2727`  
+**Tester:** Hanumantha L (PES2UG24CS179)
+**Baseline:** `fc2c53227724ae2fd914a0d1c4fb4815c1ee2727`
+**Application:** `railway_sprint2.cpp`
+**Environment:** Linux x86-64, GCC/G++ C++17
+**Evidence:** `docs/evidence/sprint2/`
 **Execution location:** disposable Linux directory; no project data was modified.
 
 ## End-to-end scenarios
@@ -15,14 +18,16 @@
 7. **Administration:** Admin added, updated, reconfigured, reported on, and removed a synthetic train. **PASS.**
 8. **Audit/persistence:** User, booking, train, and audit files were produced and inspected after execution. **PASS.**
 
-## Validation outcome
+## Validation outcome and counting method
+
+The eight numbered items above are grouped end-to-end validation themes, not the total scenario count. The evidence records **22 executed process scenarios**: **18** primary-suite scenarios from `assertions.txt` and **4** supplemental scenarios from `supplement_assertions.txt`. They map to the 36 documented test cases in `Test_Case_Document.md`; those documented cases comprise 31 PASS, 4 BLOCKED, and 1 NOT TESTED.
 
 All executed Sprint 2 functional, negative, boundary, persistence, authorization, and regression scenarios passed. No new defect was observed in the executed scope. The two Sprint 1 defects are not present in the tested Sprint 2 baseline:
 
 - DEF-001: alternative train list now appears for a full class.
 - DEF-002: impossible calendar dates are rejected.
 
-This is not a claim of complete STP exit-criteria satisfaction. Windows portability, concurrent/multi-process allocation, formal performance timing, three-user usability, and isolated unit testing remain incomplete or blocked.
+This is not a claim of complete STP exit-criteria satisfaction. Windows portability, concurrent/multi-process allocation, formal performance timing, three-user usability, filesystem fault injection, and isolated unit testing remain incomplete or blocked.
 
 ## Reproduction evidence
 

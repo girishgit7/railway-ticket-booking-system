@@ -1,5 +1,10 @@
 # Code Coverage Report — Sprint 2
 
+**Tester:** Hanumantha L (PES2UG24CS179)
+**Application:** `railway_sprint2.cpp`
+**Baseline:** `fc2c53227724ae2fd914a0d1c4fb4815c1ee2727`
+**Environment:** Linux x86-64, GCC/G++ C++17
+**Evidence:** `docs/evidence/sprint2/`
 **Tool:** GCC `gcov`  
 **Command:** `gcov -b -c railway_sprint2.cpp`  
 **Source:** `railway_sprint2.cpp` at `fc2c53227724ae2fd914a0d1c4fb4815c1ee2727`  
@@ -17,7 +22,7 @@ Taken at least once:40.27% of 2672
 Calls executed:66.74% of 1828
 ```
 
-This report separates the application source from the many standard-library headers also printed by `gcov`. Percentages are from the actual final suite plus the Cash/Card/ownership supplemental scenarios, not estimates.
+This report separates the application source from the many standard-library headers also printed by `gcov`. Percentages are from the actual final suite plus the Cash/Card/ownership supplemental scenarios, not estimates. GCC's **71.78%** is the percentage of instrumented branch sites reached; its separate **40.27%** figure is the percentage of instrumented branch outcomes taken at least once. These measure different aspects of branch execution and should not be conflated with a single conventional branch-coverage percentage.
 
 ## Evidence and interpretation
 

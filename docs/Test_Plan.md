@@ -1,7 +1,7 @@
 # Railway Ticket Booking System — Sprint 2 Test Plan
 
 **QA owner:** Hanumantha L (PES2UG24CS179)  
-**Baseline:** Original repository `main` at `fc2c53227724ae2fd914a0d1c4fb4815c1ee2727`  
+**Baseline:** Original repository `main` at `fc2c53227724ae2fd914a0d1c4fb4815c1ee2727`
 **Implementation:** `railway_sprint2.cpp`  
 **Plan basis:** Existing `Team1_STP_Railway_Ticket_Reservation_System.pdf`, SRS in `README.md`, SAD PDF, and `README_Sprint2.md`.
 
@@ -18,7 +18,9 @@ The two Sprint 1 defects are regression targets:
 
 Functional and system tests were executed through the CLI in a disposable Linux environment. Integration behavior was exercised across the CLI, file persistence, booking state, cancellation state, and audit log. Negative and boundary tests covered duplicate contacts, short passwords, invalid dates, invalid menu/PNR input, account lockout, over-limit seat requests, repeat cancellation, and unauthorized cancellation. Regression tests covered both Sprint 1 defects. Coverage was measured with GCC `gcov -b -c`.
 
-A separate unit-test framework was not present in the single-file implementation. Function-level behavior was therefore exercised through CLI and persistence probes; true isolated unit tests remain a limitation and are marked accordingly in the test case document. Windows, multi-process concurrency, formal three-user usability, and production payment settlement were not executable in this Linux sandbox and are marked BLOCKED or NOT TESTED.
+The evidence records **22 executed process scenarios**: 18 primary-suite scenarios plus 4 supplemental scenarios. These scenarios map to **36 documented test cases** in the test-case document: 31 PASS, 4 BLOCKED, and 1 NOT TESTED. The counts are not interchangeable because one process scenario can cover multiple documented cases.
+
+A separate unit-test framework was not present in the single-file implementation. Function-level behavior was therefore exercised through CLI and persistence probes; true isolated unit tests remain a limitation and are marked accordingly in the test case document. Windows, multi-process concurrency, formal performance timing, filesystem fault injection, formal three-user usability, and production payment settlement were not executable in this Linux sandbox and are marked BLOCKED or NOT TESTED.
 
 ## Environment and commands
 

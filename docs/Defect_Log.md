@@ -1,8 +1,10 @@
 # Sprint 2 Defect Log and Regression Status
 
-**Tester:** Hanumantha L (PES2UG24CS179)  
+**Tester:** Hanumantha L (PES2UG24CS179)
+**Application:** `railway_sprint2.cpp`
 **Baseline tested:** `fc2c53227724ae2fd914a0d1c4fb4815c1ee2727`  
-**Original Sprint 1 evidence:** `qa/sprint1/defect_log.md`  
+**Environment:** Linux x86-64, GCC/G++ C++17
+**Original Sprint 1 evidence:** `qa/sprint1/defect_log.md`
 **Sprint 2 evidence:** `docs/evidence/sprint2/`
 
 ## DEF-001 — Alternative train suggestions when selected class is full
