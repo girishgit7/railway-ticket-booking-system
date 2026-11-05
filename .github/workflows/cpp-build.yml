@@ -5,28 +5,35 @@ on:
     branches:
       - main
       - "feature/**"
+      - "fix/**"
       - "sprint/**"
   pull_request:
     branches:
       - main
   workflow_dispatch:
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+permissions:
+  contents: read
 
+jobs:
+  build-and-smoke-test:
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install compiler
+      - name: Set up C++ compiler
         run: |
           sudo apt-get update
           sudo apt-get install -y g++
 
-      - name: Compile C++ project
+      - name: Compile Sprint 2 with warnings as errors
         run: |
-          g++ -std=c++17 -Wall -Wextra -pedantic railway_ticket_booking_sprint1/railway_sprint1.cpp -o railway_sprint1
+          g++ -std=c++17 -Wall -Wextra -Werror -pedantic railway_sprint2.cpp -o railway_sprint2
 
-      - name: Verify build
-        run: test -x railway_sprint1
+      - name: Verify executable
+        run: test -x railway_sprint2
+
+      - name: Smoke test guest menu and clean exit
+        run: |
+          printf '0\\n' | ./railway_sprint2
