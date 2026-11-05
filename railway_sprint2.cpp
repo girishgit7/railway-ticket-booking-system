@@ -516,7 +516,7 @@ void checkPNR(const vector<Booking>& bookings, const vector<Train>& trains) {
             // Passenger access is restricted to the booking owner. Legacy records
             // without an owner mapping are visible only to the administrator.
             if (!isAdmin && b.ownerContact != currentUserContact) {
-                cout << "Access denied: this booking does not belong to your account.\\n";
+                cout << "Access denied: this booking does not belong to your account.\n";
                 return;
             }
             for (const auto& t : trains) if (t.number == b.trainNumber) {
@@ -583,7 +583,7 @@ void cancelTicket(vector<Booking>& bookings, const vector<Train>& /*trains*/) {
     cout<<"\n--- Cancel Ticket / Refund ---\n"; long long pnr=0; string input=readLine("Enter PNR: "); try{size_t n=0;pnr=stoll(input,&n);if(n!=input.size())throw 1;}catch(...){cout<<"Invalid PNR.\n";return;}
     for(auto &b:bookings) if(b.pnr==pnr){
         // Legacy bookings without an owner mapping can only be managed by admin.
-        if(!isAdmin && b.ownerContact!=currentUserContact){cout<<"Access denied: this booking does not belong to your account.\\n";return;}
+        if(!isAdmin && b.ownerContact!=currentUserContact){cout<<"Access denied: this booking does not belong to your account.\n";return;}
         if(b.status!="CONFIRMED"){cout<<"This PNR is already cancelled or not active. No changes made.\n";return;}
         double charge=b.fare*0.10; b.refund=b.fare-charge; b.status="CANCELLED";
         if(!saveBookings(bookings)){b.status="CONFIRMED";b.refund=0;cout<<"Could not save cancellation.\n";return;}
@@ -617,7 +617,7 @@ void adminMenu(vector<Train>& trains, vector<Booking>& bookings){
                            isdigit(static_cast<unsigned char>(value[4])) &&
                            stoi(value.substr(0,2))<24 && stoi(value.substr(3,2))<60)
                             return value;
-                        cout<<"Enter a valid 24-hour time in HH:MM format.\\n";
+                        cout<<"Enter a valid 24-hour time in HH:MM format.\n";
                     }
                 };
                 auto readFare=[](const string& label){
@@ -628,27 +628,27 @@ void adminMenu(vector<Train>& trains, vector<Booking>& bookings){
                             if(used==value.size() && amount>=0 && amount<=1000000)
                                 return amount;
                         }catch(...){}
-                        cout<<"Enter a valid fare from 0 to 1000000.\\n";
+                        cout<<"Enter a valid fare from 0 to 1000000.\n";
                     }
                 };
                 it->name=readLine("Train name: ");
                 it->source=readLine("Source: ");
                 it->destination=readLine("Destination: ");
                 if(it->name.empty() || it->source.empty() || it->destination.empty()){
-                    *it=previous; cout<<"Train name and stations cannot be empty.\\n"; continue;
+                    *it=previous; cout<<"Train name and stations cannot be empty.\n"; continue;
                 }
                 it->departure=readTime("Departure (HH:MM): ");
                 it->arrival=readTime("Arrival (HH:MM): ");
-                cout<<"Enter updated fares per seat:\\n";
+                cout<<"Enter updated fares per seat:\n";
                 it->sleeperFare=readFare("Sleeper fare: ");
                 it->acFare=readFare("AC fare: ");
                 it->generalFare=readFare("General fare: ");
                 if(saveTrains(trains)){
                     audit("ADMIN_UPDATE_TRAIN",0,no);
-                    cout<<"Train details and fares updated.\\n";
+                    cout<<"Train details and fares updated.\n";
                 }else{
                     *it=previous;
-                    cout<<"Could not save changes; previous train details restored.\\n";
+                    cout<<"Could not save changes; previous train details restored.\n";
                 }
             }}
         else if(c==5){int no=readInt("Train number (0 for all trains): ",0,999999);string from=readDate(),to=readDate();if(to<from){cout<<"End date must be on/after start date.\n";continue;}double revenue=0;int seats=0,capacity=0;for(const auto&b:bookings)if((no==0||b.trainNumber==no)&&b.trainDate>=from&&b.trainDate<=to){if(b.status=="CONFIRMED"){revenue+=b.fare;seats+=b.seats;}else revenue+=(b.fare-b.refund);}for(const auto&t:trains)if(no==0||t.number==no)capacity+=t.sleeperTotal+t.acTotal+t.generalTotal;cout<<"\nReport period: "<<from<<" to "<<to<<"\nConfirmed seats sold: "<<seats<<"\nNet revenue after simulated refunds: Rs. "<<fixed<<setprecision(2)<<revenue<<"\nConfigured seat capacity (per train, not date-specific): "<<capacity<<"\n";audit("ADMIN_REPORT",0,no);}
