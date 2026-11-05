@@ -4,14 +4,15 @@ on:
   push:
     branches:
       - main
-      - "feature/**"
-      - "fix/**"
-      - "sprint/**"
   pull_request:
     branches:
       - main
       - "feature/**"
   workflow_dispatch:
+
+concurrency:
+  group: railway-cpp-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -23,14 +24,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up C++ compiler
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y g++
-
-      - name: Compile Sprint 2 with warnings as errors
-        run: |
-          g++ -std=c++17 -Wall -Wextra -pedantic railway_sprint2.cpp -o railway_sprint2
+      - name: Compile Sprint 2
+        run: g++ -std=c++17 -Wall -Wextra -pedantic railway_sprint2.cpp -o railway_sprint2
 
       - name: Verify executable
         run: test -x railway_sprint2
