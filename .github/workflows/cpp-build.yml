@@ -4,28 +4,32 @@ on:
   push:
     branches:
       - main
-      - "feature/**"
   pull_request:
     branches:
       - main
+      - "feature/**"
   workflow_dispatch:
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+concurrency:
+  group: railway-cpp-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
+permissions:
+  contents: read
+
+jobs:
+  build-and-smoke-test:
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install compiler
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y g++
+      - name: Compile Sprint 2
+        run: g++ -std=c++17 -Wall -Wextra -pedantic railway_sprint2.cpp -o railway_sprint2
 
-      - name: Compile C++ project
-        run: |
-          g++ -std=c++17 -Wall -Wextra -pedantic railway_ticket_booking_sprint1/railway_sprint1.cpp -o railway_sprint1
+      - name: Verify executable
+        run: test -x railway_sprint2
 
-      - name: Verify build
-        run: test -x railway_sprint1
+      - name: Smoke test guest menu and clean exit
+        run: |
+          printf '0\n' | ./railway_sprint2
