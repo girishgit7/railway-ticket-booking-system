@@ -1,0 +1,72 @@
+========================================
+ RAILWAY RESERVATION SYSTEM - SPRINT 2
+========================================
+Demo data only; payment/refunds are simulated. Admin login: admin / Railway@123
+
+Welcome Menu
+1. Register passenger
+2. Login
+3. Search trains (guest)
+4. View all trains (guest)
+5. View cities/stations
+0. Exit
+Choose: 
+--- Login ---
+Contact/username (admin for administrator): Password: 
+Welcome, Alice QA.
+
+Account Menu (Alice QA)
+1. Search trains
+2. Book ticket
+3. Check PNR/refund status
+4. Cancel ticket
+5. My booking history
+9. Logout
+Choose: 
+--- Cancel Ticket / Refund ---
+Enter PNR: This PNR is already cancelled or not active. No changes made.
+
+Account Menu (Alice QA)
+1. Search trains
+2. Book ticket
+3. Check PNR/refund status
+4. Cancel ticket
+5. My booking history
+9. Logout
+Choose: 
+--- Check PNR ---
+Enter PNR: 
+========================================
+          RAILWAY E-TICKET
+========================================
+PNR            : 1893602221
+Passenger      : Alice QA
+Train          : 16526 - Kanyakumari Express
+Route          : Bengaluru -> Chennai
+Journey date   : 2026-11-03
+Timing         : 20:10 - 04:45
+Class          : General
+Seats          : 2
+Berth pref.    : Window
+Payment mode   : UPI (simulated)
+Total fare     : Rs. 440.00
+Status         : CANCELLED
+Refund amount   : Rs. 396.00 (simulated)
+========================================
+
+Account Menu (Alice QA)
+1. Search trains
+2. Book ticket
+3. Check PNR/refund status
+4. Cancel ticket
+5. My booking history
+9. Logout
+Choose: 
+Welcome Menu
+1. Register passenger
+2. Login
+3. Search trains (guest)
+4. View all trains (guest)
+5. View cities/stations
+0. Exit
+Choose: Thank you for using the Railway Reservation System.

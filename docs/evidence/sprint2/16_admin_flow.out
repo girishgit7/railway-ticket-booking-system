@@ -1,0 +1,101 @@
+========================================
+ RAILWAY RESERVATION SYSTEM - SPRINT 2
+========================================
+Demo data only; payment/refunds are simulated. Admin login: admin / Railway@123
+
+Welcome Menu
+1. Register passenger
+2. Login
+3. Search trains (guest)
+4. View all trains (guest)
+5. View cities/stations
+0. Exit
+Choose: 
+--- Login ---
+Contact/username (admin for administrator): Password: 
+Administrator login successful. (Change the demo credentials before real use.)
+
+Account Menu (Administrator)
+1. Search trains
+2. Book ticket
+3. Check PNR/refund status
+4. Cancel ticket
+5. My booking history
+6. Administration
+9. Logout
+Choose: 
+--- Administration ---
+1. Add train
+2. Update train route/timings/fares
+3. Remove train
+4. Configure seat inventory
+5. Occupancy/revenue report
+0. Back
+Choose: Train number: Train name: Source: Destination: Departure (HH:MM): Arrival (HH:MM): Sleeper seats: AC seats: General seats: Fares per seat:
+Sleeper fare: AC fare: General fare: Train added.
+
+--- Administration ---
+1. Add train
+2. Update train route/timings/fares
+3. Remove train
+4. Configure seat inventory
+5. Occupancy/revenue report
+0. Back
+Choose: Train number: Train name: Source: Destination: Departure (HH:MM): Arrival (HH:MM): Train updated.
+
+--- Administration ---
+1. Add train
+2. Update train route/timings/fares
+3. Remove train
+4. Configure seat inventory
+5. Occupancy/revenue report
+0. Back
+Choose: Train number: New Sleeper capacity: New AC capacity: New General capacity: Inventory updated.
+
+--- Administration ---
+1. Add train
+2. Update train route/timings/fares
+3. Remove train
+4. Configure seat inventory
+5. Occupancy/revenue report
+0. Back
+Choose: Train number (0 for all trains): Journey date (YYYY-MM-DD): Journey date (YYYY-MM-DD): 
+Report period: 2026-11-01 to 2026-11-30
+Confirmed seats sold: 0
+Net revenue after simulated refunds: Rs. 0.00
+Configured seat capacity (per train, not date-specific): 18
+
+--- Administration ---
+1. Add train
+2. Update train route/timings/fares
+3. Remove train
+4. Configure seat inventory
+5. Occupancy/revenue report
+0. Back
+Choose: Train number: Train removed.
+
+--- Administration ---
+1. Add train
+2. Update train route/timings/fares
+3. Remove train
+4. Configure seat inventory
+5. Occupancy/revenue report
+0. Back
+Choose: 
+Account Menu (Administrator)
+1. Search trains
+2. Book ticket
+3. Check PNR/refund status
+4. Cancel ticket
+5. My booking history
+6. Administration
+9. Logout
+Choose: 
+Welcome Menu
+1. Register passenger
+2. Login
+3. Search trains (guest)
+4. View all trains (guest)
+5. View cities/stations
+0. Exit
+Choose: Thank you for using the Railway Reservation System.

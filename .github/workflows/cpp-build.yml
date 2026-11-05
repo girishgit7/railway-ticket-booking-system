@@ -1,4 +1,3 @@
-
 name: Railway C++ Build
 
 on:
@@ -6,9 +5,11 @@ on:
     branches:
       - main
       - "feature/**"
+      - "sprint/**"
   pull_request:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   build:
@@ -25,7 +26,7 @@ jobs:
 
       - name: Compile C++ project
         run: |
-          g++ -std=c++17 -Wall -Wextra -pedantic railway_sprint1.cpp -o railway_sprint1
+          g++ -std=c++17 -Wall -Wextra -pedantic railway_ticket_booking_sprint1/railway_sprint1.cpp -o railway_sprint1
 
       - name: Verify build
         run: test -x railway_sprint1

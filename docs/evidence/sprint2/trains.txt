@@ -1,0 +1,41 @@
+12627|Karnataka Express|Bengaluru|New Delhi|19:20|10:30|80|32|100|850|2100|420|v1
+12007|Shatabdi Express|Bengaluru|Chennai|06:00|11:00|0|40|60|0|950|280|v1
+16526|Kanyakumari Express|Bengaluru|Chennai|20:10|04:45|70|20|90|430|1150|220|v1
+12640|Brindavan Express|Chennai|Bengaluru|07:50|13:15|0|30|70|0|800|250|v1
+22691|Rajdhani Express|Bengaluru|New Delhi|20:00|05:50|0|48|0|0|2600|0|v1
+12608|Lalbagh Express|Bengaluru|Chennai|06:30|12:45|70|24|90|390|980|210|v1
+12609|Mysuru Express|Chennai|Mysuru|22:30|08:20|80|24|100|420|1100|230|v1
+16591|Hampi Express|Bengaluru|Hubballi|22:00|07:15|75|20|100|360|900|190|v1
+17310|Vasco Express|Bengaluru|Goa|20:00|09:30|80|24|90|400|1050|210|v1
+16210|Mysuru Express|Bengaluru|Mysuru|08:00|10:45|50|16|80|180|450|100|v1
+12650|Karnataka Sampark Kranti|Yeshvantpur|New Delhi|13:30|15:00|90|32|0|780|1950|0|v1
+12678|Ernakulam Express|Bengaluru|Kochi|19:00|08:00|80|24|100|420|1150|220|v1
+16527|Kannur Express|Bengaluru|Mangaluru|20:00|08:30|75|20|90|390|980|200|v1
+12295|Sanghamitra Express|Bengaluru|Patna|09:00|20:00|100|32|120|900|2200|450|v1
+12864|Howrah Express|Bengaluru|Kolkata|22:30|06:00|100|32|120|950|2350|480|v1
+12616|Grand Trunk Express|Chennai|New Delhi|18:40|06:20|100|32|120|850|2100|430|v1
+12622|Tamil Nadu Express|Chennai|New Delhi|22:00|07:00|100|36|120|900|2250|450|v1
+12656|Navjeevan Express|Chennai|Ahmedabad|10:00|19:30|100|32|120|850|2050|420|v1
+12968|Jaipur Express|Chennai|Jaipur|17:00|08:00|100|32|120|950|2300|470|v1
+12618|Mangala Lakshadweep Express|Ernakulam|Mumbai|10:00|13:30|100|32|120|700|1750|350|v1
+12164|Chennai Express|Mumbai|Chennai|20:30|22:00|100|36|120|750|1850|380|v1
+11013|Coimbatore Express|Mumbai|Coimbatore|16:00|20:30|100|32|120|720|1800|360|v1
+12952|Mumbai Rajdhani|Mumbai|New Delhi|17:00|08:30|0|48|0|0|2800|0|v1
+12009|Shatabdi Express|Mumbai|Ahmedabad|06:25|12:40|0|40|60|0|1050|300|v1
+12951|Mumbai Rajdhani|New Delhi|Mumbai|16:30|08:15|0|48|0|0|2800|0|v1
+12301|Howrah Rajdhani|New Delhi|Kolkata|16:50|09:55|0|48|0|0|2700|0|v1
+12002|Bhopal Shatabdi|New Delhi|Bhopal|06:00|14:00|0|40|60|0|1500|350|v1
+12424|Dibrugarh Rajdhani|New Delhi|Guwahati|16:20|10:00|0|48|0|0|2900|0|v1
+12840|Chennai Mail|Chennai|Kolkata|19:00|04:30|100|32|120|900|2200|450|v1
+16346|Netravati Express|Thiruvananthapuram|Mumbai|09:00|17:00|100|32|120|780|1900|390|v1
+16382|Kanyakumari Express|Kanyakumari|Bengaluru|17:30|08:15|90|24|100|450|1150|230|v1
+17230|Sabari Express|Hyderabad|Thiruvananthapuram|12:00|16:00|100|32|120|800|1950|400|v1
+12702|Hussain Sagar Express|Hyderabad|Mumbai|14:00|05:30|100|32|120|650|1650|330|v1
+12723|Telangana Express|Hyderabad|New Delhi|06:00|07:00|100|36|120|850|2150|440|v1
+17030|Hyderabad Express|Hyderabad|Chennai|20:00|08:30|80|24|100|430|1100|220|v1
+17613|Nanded Express|Hyderabad|Pune|21:00|08:30|80|24|100|400|980|200|v1
+11020|Konark Express|Bhubaneswar|Mumbai|15:00|05:00|100|32|120|750|1850|380|v1
+12801|Purushottam Express|Puri|New Delhi|21:45|04:00|100|32|120|900|2200|450|v1
+18477|Utkal Express|Puri|Haridwar|20:00|08:00|100|32|120|850|2100|430|v1
+19020|Dehradun Express|Dehradun|Mumbai|10:00|16:00|100|32|120|780|1900|390|v1
+12028|Shatabdi Express|Chandigarh|New Delhi|07:00|10:20|0|40|60|0|900|260|v1
