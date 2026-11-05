@@ -1,0 +1,23 @@
+node_modules/
+.env
+.env.*
+!.env.example
+dist/
+coverage/
+# Compiled executables
+*.exe
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+
+# Local backups
+backup/
+
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
