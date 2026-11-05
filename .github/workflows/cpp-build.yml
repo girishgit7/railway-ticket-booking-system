@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: railway-cpp-\${{ github.event.pull_request.number || github.ref }}
+  group: railway-cpp-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
