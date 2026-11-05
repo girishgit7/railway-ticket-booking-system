@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: railway-cpp-${{ github.event.pull_request.number || github.ref }}
+  group: railway-cpp-\${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -32,4 +32,4 @@ jobs:
 
       - name: Smoke test guest menu and clean exit
         run: |
-          printf '0\\n' | ./railway_sprint2
+          printf '0\n' | ./railway_sprint2
