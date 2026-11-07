@@ -1,0 +1,11 @@
+import { Router } from "express";
+import { requireAuth, requireAdmin } from "../middleware/auth.js";
+import { searchCppTrains, createCppBooking, getCppHistory, getCppPnr, cancelCppBooking, getCppAdminBookings } from "../controllers/engineController.js";
+const router = Router();
+router.get("/search", searchCppTrains);
+router.get("/admin/bookings", requireAuth, requireAdmin, getCppAdminBookings);
+router.post("/bookings", requireAuth, createCppBooking);
+router.get("/bookings/my", requireAuth, getCppHistory);
+router.get("/bookings/pnr/:pnr", requireAuth, getCppPnr);
+router.post("/bookings/pnr/:pnr/cancel", requireAuth, cancelCppBooking);
+export default router;

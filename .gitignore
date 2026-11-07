@@ -1,5 +1,6 @@
 node_modules/
-.env
+.env*
+!.env.example
 .env.*
 !.env.example
 dist/
@@ -21,3 +22,28 @@ node_modules/
 
 # Environment variables
 .env
+# Generated C++ API executable
+server/bin/
+
+# Runtime engine coordination and recovery files
+.railway-engine.lock
+*.bak
+
+# Railway runtime and passenger data
+bookings.txt
+users.txt
+audit.log
+rrs_bookings.txt
+rrs_users.txt
+rrs_audit.log
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+.env.local
+
+# Generated binaries and build output
+server/bin/
+client/dist/
+node_modules/

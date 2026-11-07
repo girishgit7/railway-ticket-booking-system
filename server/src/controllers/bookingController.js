@@ -429,6 +429,14 @@ export async function cancelBooking(req, res) {
 
     console.error("Booking cancellation error:", error);
 
+    // MongoDB transactions are unavailable on standalone mongod instances.
+    // Keep cancellation atomic rather than attempting unsafe partial writes.
+    if (error.code === 20 || /Transaction numbers are only allowed|replica set|mongos/i.test(error.message || "")) {
+      return res.status(503).json({
+        message: "Cancellation requires MongoDB running as a replica set or on MongoDB Atlas. Configure the database and retry.",
+      });
+    }
+
     return res.status(500).json({
       message: "Unable to cancel booking.",
     });

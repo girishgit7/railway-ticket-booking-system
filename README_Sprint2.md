@@ -26,13 +26,10 @@ g++ -std=c++17 -Wall -Wextra -pedantic railway_sprint2.cpp -o railway_sprint2.ex
 .\\railway_sprint2.exe
 ```
 
-Run in a real terminal for masked password input. Data files are read/written relative to the current working directory: `trains.txt`, `bookings.txt`, `users.txt`, and `audit.log`.
+Run in a real terminal for masked password input. The C++ API adapter used by the MERN application shares the same `trains.txt` and `bookings.txt` files; do not run the interactive console at the same time as the Express server. Data files are read/written relative to the current working directory: `trains.txt`, `bookings.txt`, `users.txt`, and `audit.log`.
 
-## Demo administrator
-- Username: `admin`
-- Password: `Railway@123`
-
-This fixed credential is for academic demonstration only. Do not use real passenger or payment data.
+## Standalone C++ administrator
+The standalone console no longer contains a hard-coded administrator password. Configure `RAILWAY_CPP_ADMIN_CONTACT` and `RAILWAY_CPP_ADMIN_PASSWORD` in the shell before launching the executable if you need its separate local administrator login. The web application uses the MongoDB administrator account and JWT-protected admin routes. Never commit credentials or use real passenger/payment data in this demo.
 
 ## Behaviour and limitations
 - Routes, timings, fares, and capacities in `trains.txt` are illustrative demo data, not live railway information.

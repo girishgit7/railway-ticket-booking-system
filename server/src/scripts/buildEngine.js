@@ -1,0 +1,14 @@
+import { spawnSync } from "node:child_process";
+import { mkdirSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+const here = path.dirname(fileURLToPath(import.meta.url));
+const serverRoot = path.resolve(here, "../..");
+const projectRoot = path.resolve(serverRoot, "..");
+const bin = path.join(serverRoot, "bin");
+mkdirSync(bin, { recursive: true });
+const output = path.join(bin, process.platform === "win32" ? "railway_engine.exe" : "railway_engine");
+const source = path.join(serverRoot, "engine", "railway_api.cpp");
+const result = spawnSync("g++", ["-std=c++17", "-O2", source, "-o", output], { cwd: projectRoot, stdio: "inherit" });
+if (result.error || result.status !== 0) process.exit(1);
+console.log(`C++ booking engine built: ${output}`);
