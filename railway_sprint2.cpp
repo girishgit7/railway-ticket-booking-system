@@ -9,6 +9,7 @@
 #include <ctime>
 #include <cctype>
 #include <cstdio>
+#include <cstdlib>
 #ifdef _WIN32
 #include <conio.h>
 #else
@@ -35,8 +36,6 @@ const string TRAIN_FILE = "trains.txt";
 const string BOOKING_FILE = "bookings.txt";
 const string AUDIT_FILE = "audit.log";
 const string USER_FILE = "users.txt";
-const string ADMIN_CONTACT = "admin";
-const string ADMIN_PASSWORD = "Railway@123";
 string currentUserName;
 string currentUserContact;
 bool isAdmin = false;
@@ -55,6 +54,7 @@ struct Booking {
     double refund{};
     int trainNumber{}, seats{};
     double fare{};
+    string passengerDetailsJson;
 };
 
 string clean(string s) {
@@ -224,6 +224,7 @@ vector<Booking> loadBookings() {
             b.paymentMode=f[7]; b.fare=stod(f[8]); b.status="CONFIRMED"; b.refund=0.0;
             if (f.size() >= 11) { b.status=f[9]; b.refund=stod(f[10]); }
             if (f.size() >= 12) b.ownerContact=f[11]; else b.ownerContact="";
+            if (f.size() >= 13) b.passengerDetailsJson=f[12];
             bookings.push_back(b);
         } catch (...) {}
     }
@@ -238,7 +239,7 @@ bool saveBookings(const vector<Booking>& bookings) {
         out << b.pnr << '|' << b.passenger << '|' << b.trainNumber << '|'
             << b.trainDate << '|' << b.className << '|' << b.seats << '|'
             << b.berth << '|' << b.paymentMode << '|' << fixed << setprecision(2)
-            << b.fare << '|' << b.status << '|' << fixed << setprecision(2) << b.refund << '|' << b.ownerContact << '\n';
+            << b.fare << '|' << b.status << '|' << fixed << setprecision(2) << b.refund << '|' << b.ownerContact << '|' << b.passengerDetailsJson << '\n';
     }
     out.close();
     if (!out) return false;
@@ -569,8 +570,10 @@ bool registerUser() {
     cout<<"Registration successful. Please log in.\n"; return true;
 }
 bool loginUser() {
-    cout<<"\n--- Login ---\n"; string contact=readLine("Contact/username (admin for administrator): "); string pass=readPassword("Password: ");
-    if(contact==ADMIN_CONTACT && pass==ADMIN_PASSWORD){isAdmin=true;currentUserName="Administrator";currentUserContact=ADMIN_CONTACT;cout<<"Administrator login successful. (Change the demo credentials before real use.)\n";audit("ADMIN_LOGIN",0,0);return true;}
+    cout<<"\n--- Login ---\n"; string contact=readLine("Contact/username: "); string pass=readPassword("Password: ");
+    const char* adminContact = getenv("RAILWAY_CPP_ADMIN_CONTACT");
+    const char* adminPassword = getenv("RAILWAY_CPP_ADMIN_PASSWORD");
+    if(adminContact && adminPassword && *adminContact && *adminPassword && contact==adminContact && pass==adminPassword){isAdmin=true;currentUserName="Administrator";currentUserContact=adminContact;cout<<"Administrator login successful.\n";audit("ADMIN_LOGIN",0,0);return true;}
     auto users=loadUsers(); for(auto &u:users) if(u.contact==contact){
         if(u.locked){cout<<"Account locked after 3 failed login attempts. Contact administrator.\n";return false;}
         if(u.hash==passwordHash(pass)){u.failed=0;saveUsers(users);currentUserName=u.name;currentUserContact=u.contact;isAdmin=false;cout<<"Welcome, "<<u.name<<".\n";return true;}
@@ -657,7 +660,7 @@ void adminMenu(vector<Train>& trains, vector<Booking>& bookings){
 int main() {
     vector<Train> trains=loadTrains(); vector<Booking> bookings=loadBookings();
     cout << "========================================\n RAILWAY RESERVATION SYSTEM - SPRINT 2\n========================================\n"
-         << "Demo data only; payment/refunds are simulated. Admin login: admin / Railway@123\n";
+         << "Demo train data only; payment/refunds are simulated. Standalone admin credentials must be configured with RAILWAY_CPP_ADMIN_CONTACT and RAILWAY_CPP_ADMIN_PASSWORD.\n";
     while(true){
         cout<<"\nWelcome Menu\n1. Register passenger\n2. Login\n3. Search trains (guest)\n4. View all trains (guest)\n5. View cities/stations\n0. Exit\n";
         int c=readInt("Choose: ",0,5); if(c==0)break;

@@ -5,6 +5,7 @@ import Train from "../models/Train.js";
 import Schedule from "../models/Schedule.js";
 import Booking from "../models/Booking.js";
 import AuditLog from "../models/AuditLog.js";
+import { runCpp } from "../services/cppEngine.js";
 
 const CLASS_NAMES = ["GENERAL", "SLEEPER", "AC3", "AC2", "FIRST_AC"];
 const isText = (v, max = 100) => typeof v === "string" && v.trim().length > 0 && v.trim().length <= max;
@@ -15,11 +16,11 @@ async function audit(actor, action, targetType, targetId, metadata = {}) {
 }
 
 export async function getAdminOverview(req, res) {
-  const [users, trains, schedules, bookings] = await Promise.all([
+  const [users, trains, schedules, cppBookings] = await Promise.all([
     User.countDocuments(), Train.countDocuments({ active: true }),
-    Schedule.countDocuments({ active: true }), Booking.countDocuments(),
+    Schedule.countDocuments({ active: true }), runCpp(["admin-bookings"]),
   ]);
-  res.json({ users, activeTrains: trains, activeSchedules: schedules, bookings });
+  res.json({ users, activeTrains: trains, activeSchedules: schedules, bookings: cppBookings.length, bookingSource: "cpp" });
 }
 
 export async function listUsers(req, res) {
@@ -33,8 +34,15 @@ export async function changeUserRole(req, res) {
   if (!mongoose.isValidObjectId(id)) return res.status(400).json({ message: "Invalid user ID." });
   if (!["passenger", "admin"].includes(role)) return res.status(400).json({ message: "Role must be passenger or admin." });
   if (String(req.user._id) === id && role !== "admin") return res.status(400).json({ message: "You cannot remove your own administrator role." });
+  const target = await User.findById(id).select("role");
+  if (!target) return res.status(404).json({ message: "User not found." });
+  if (target.role === "admin" && role === "passenger") {
+    const adminCount = await User.countDocuments({ role: "admin" });
+    if (adminCount <= 1) {
+      return res.status(409).json({ message: "The last administrator account cannot be demoted." });
+    }
+  }
   const user = await User.findByIdAndUpdate(id, { $set: { role } }, { new: true, runValidators: true }).select("name email role");
-  if (!user) return res.status(404).json({ message: "User not found." });
   await audit(req.user._id, "USER_ROLE_CHANGED", "User", id, { role });
   res.json({ user });
 }

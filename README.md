@@ -431,3 +431,18 @@ Further verification is required for overbooking prevention, seat restoration af
 ## 10. Conclusion
 
 Sprint 2 extends the Railway Reservation System with train administration, passenger authentication, ticket booking, cancellation and refund calculations, and reservation tracking. The project demonstrates C++ programming, file handling, and software testing.
+
+## Sprint 3 audit and verification
+
+See [SPRINT3_AUDIT_AND_TEST_REPORT.md](./SPRINT3_AUDIT_AND_TEST_REPORT.md) for the
+latest audit, changes, verification results, and remaining architectural limitations.
+
+Run the backend test suite with:
+
+```powershell
+cd .\server
+npm test
+```
+
+The C++ integration test compiles the engine into a temporary directory and uses
+isolated temporary data files. It does not modify the project's live booking data.
