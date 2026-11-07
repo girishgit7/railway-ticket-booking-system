@@ -2,11 +2,13 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
+import mongoose from "mongoose";
 
 import { connectDB } from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import trainRoutes from "./routes/trainRoutes.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 
 const app = express();
 
@@ -26,7 +28,7 @@ app.get("/api/health", (req, res) => {
   res.json({
     status: "ok",
     service: "railway-reservation-api",
-    database: "connected",
+    database: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
   });
 });
 
@@ -34,6 +36,7 @@ app.get("/api/health", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/trains", trainRoutes);
 app.use("/api/bookings", bookingRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Handle unknown endpoints
 app.use((req, res) => {
