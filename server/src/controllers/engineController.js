@@ -2,6 +2,13 @@ import { Buffer } from "node:buffer";
 import { runCpp } from "../services/cppEngine.js";
 
 const validDate = (value) => typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(`${value}T00:00:00Z`)) && new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) === value;
+const withinProjectHorizon = (value) => {
+  if (!validDate(value)) return false;
+  const today = new Date(); today.setUTCHours(0, 0, 0, 0);
+  const journey = new Date(`${value}T00:00:00Z`);
+  const days = Math.floor((journey.getTime() - today.getTime()) / 86400000);
+  return days >= 0 && days <= 240;
+};
 const toUiBooking = (b) => ({
   _id: b.pnr, pnr: b.pnr, travelClass: b.travelClass, fare: b.fare,
   status: b.status, paymentStatus: b.paymentStatus, refundAmount: b.refundAmount,
@@ -13,8 +20,8 @@ const toUiBooking = (b) => ({
 export async function searchCppTrains(req, res, next) {
   try {
     const { source, destination, date } = req.query;
-    if (typeof source !== "string" || typeof destination !== "string" || !source.trim() || !destination.trim() || source.trim().toLowerCase() === destination.trim().toLowerCase() || !validDate(date)) {
-      return res.status(400).json({ message: "Provide different source/destination stations and a valid YYYY-MM-DD date." });
+    if (typeof source !== "string" || typeof destination !== "string" || !source.trim() || !destination.trim() || source.trim().toLowerCase() === destination.trim().toLowerCase() || !withinProjectHorizon(date)) {
+      return res.status(400).json({ message: "Provide different source/destination stations and a journey date from today through 240 days ahead." });
     }
     const result = await runCpp(["search", source.trim(), destination.trim(), date]);
     return res.json({ count: result.journeys.length, journeys: result.journeys.map((j) => ({
@@ -28,7 +35,7 @@ export async function searchCppTrains(req, res, next) {
 export async function createCppBooking(req, res, next) {
   try {
     const { trainNumber, journeyDate, travelClass, passengers, paymentMode, berthPreference = "no-preference" } = req.body ?? {};
-    if (!/^\d{1,6}$/.test(String(trainNumber ?? "")) || !validDate(journeyDate)) return res.status(400).json({ message: "Valid train number and journey date are required." });
+    if (!/^\d{1,6}$/.test(String(trainNumber ?? "")) || !withinProjectHorizon(journeyDate)) return res.status(400).json({ message: "Journey date must be between today and 240 days ahead (project demo booking window)." });
     if (!["GENERAL", "SLEEPER", "AC3", "AC2", "FIRST_AC"].includes(travelClass)) return res.status(400).json({ message: "Invalid travel class." });
     if (!Array.isArray(passengers) || passengers.length < 1 || passengers.length > 6 || passengers.some((p) => typeof p?.name !== "string" || p.name.trim().length < 2 || p.name.trim().length > 80 || /[\u0000-\u001f|]/.test(p.name) || !Number.isInteger(Number(p.age)) || Number(p.age) < 1 || Number(p.age) > 120 || !["male", "female", "other", "unspecified"].includes(p.gender || "unspecified") || !["no-preference", "lower", "middle", "upper", "side-lower", "side-upper"].includes(p.berthPreference || "no-preference"))) return res.status(400).json({ message: "Enter 1–6 passengers with valid names and ages." });
     if (!["UPI", "CARD_SIMULATED", "NET_BANKING", "CASH"].includes(paymentMode)) return res.status(400).json({ message: "Invalid simulated payment mode." });

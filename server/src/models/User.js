@@ -17,9 +17,16 @@ const userSchema = new mongoose.Schema(
       trim: true,
       maxlength: 254,
     },
+    // Password is optional for accounts created through Google sign-in.
     passwordHash: {
       type: String,
-      required: true,
+      required: false,
+      select: false,
+    },
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
       select: false,
     },
     role: {

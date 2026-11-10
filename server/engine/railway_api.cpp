@@ -51,8 +51,22 @@ static string classCode(const string& c) {
 static string paymentMap(const string& p) {
     if (p == "CASH") return "Cash";
     if (p == "CARD_SIMULATED" || p == "CARD") return "Card";
-    if (p == "NET_BANKING") return "Net Banking";
     return "UPI";
+}
+static bool withinProjectBookingHorizon(const string& date) {
+    if (!validDate(date)) return false;
+    time_t now = time(nullptr);
+    tm todayTm = *localtime(&now);
+    todayTm.tm_hour = 0; todayTm.tm_min = 0; todayTm.tm_sec = 0;
+    time_t today = mktime(&todayTm);
+    tm journeyTm{};
+    journeyTm.tm_year = stoi(date.substr(0, 4)) - 1900;
+    journeyTm.tm_mon = stoi(date.substr(5, 2)) - 1;
+    journeyTm.tm_mday = stoi(date.substr(8, 2));
+    journeyTm.tm_isdst = -1;
+    time_t journey = mktime(&journeyTm);
+    const double days = difftime(journey, today) / 86400.0;
+    return days >= 0 && days <= 240;
 }
 static const Train* findTrain(const vector<Train>& trains, int no) {
     for (const auto& t : trains) if (t.number == no) return &t;
@@ -82,7 +96,7 @@ int main(int argc, char** argv) {
     if (cmd == "search") {
         if (argc != 6) { cerr << "search requires source destination date"; return 2; }
         string source = argv[3], destination = argv[4], date = argv[5];
-        if (!validDate(date)) { cerr << "Invalid journey date"; return 2; }
+        if (!withinProjectBookingHorizon(date)) { cerr << "HTTP 400: Journey date must be between today and 240 days ahead (project demo booking window)"; return 2; }
         auto matches = searchTrains(trains, source, destination);
         cout << "{\"source\":\"" << jsonEscape(source) << "\",\"destination\":\"" << jsonEscape(destination) << "\",\"journeyDate\":\"" << date << "\",\"demoData\":true,\"journeys\":[";
         bool first = true;
@@ -106,7 +120,7 @@ int main(int argc, char** argv) {
         int trainNo=0; try { trainNo=stoi(argv[4]); } catch (...) { cerr << "Invalid train number"; return 2; }
         string className=classMap(rawClass);
         vector<string> names=splitLines(b64decode(argv[7]));
-        if (email.empty() || email.find('|')!=string::npos || !validDate(date) || date < [&](){time_t n=time(nullptr); tm* x=localtime(&n); char b[11]; strftime(b,sizeof(b),"%Y-%m-%d",x); return string(b);}() || !className.size() || names.empty() || names.size()>6) { cerr << "Invalid booking details"; return 2; }
+        if (email.empty() || email.find('|')!=string::npos || !withinProjectBookingHorizon(date) || !className.size() || names.empty() || names.size()>6) { cerr << "Invalid booking details"; return 2; }
         const Train* t=findTrain(trains,trainNo); if (!t) { cerr << "HTTP 404: Train is not in the C++ engine catalogue"; return 1; }
         string today=[&](){time_t n=time(nullptr);tm*x=localtime(&n);char d[11];strftime(d,sizeof(d),"%Y-%m-%d",x);return string(d);}();
         string nowTime=[&](){time_t n=time(nullptr);tm*x=localtime(&n);char d[6];strftime(d,sizeof(d),"%H:%M",x);return string(d);}();

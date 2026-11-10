@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import AuditLog from "../models/AuditLog.js";
+import { verifyGoogleCredential } from "../services/googleToken.js";
 
 const LOCK_DURATION_MS = 15 * 60 * 1000;
 const MAX_FAILED_ATTEMPTS = 3;
@@ -148,6 +149,12 @@ export async function login(req, res) {
       });
     }
 
+    if (!user.passwordHash) {
+      return res.status(401).json({
+        message: "This account uses Google sign-in. Continue with Google instead.",
+      });
+    }
+
     const now = new Date();
 
     if (user.lockedUntil && user.lockedUntil > now) {
@@ -212,6 +219,63 @@ export async function login(req, res) {
   } catch (error) {
     console.error("Login error:", error.message);
     return res.status(500).json({ message: "Login failed" });
+  }
+}
+
+export async function googleLogin(req, res) {
+  try {
+    const { credential } = req.body ?? {};
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+
+    if (!clientId) {
+      return res.status(503).json({ message: "Google sign-in is not configured on the server." });
+    }
+    if (typeof credential !== "string" || credential.length > 10000) {
+      return res.status(400).json({ message: "A valid Google credential is required." });
+    }
+
+    const payload = await verifyGoogleCredential(credential, clientId);
+
+    if (!payload?.sub || !payload.email || payload.email_verified !== true) {
+      return res.status(401).json({ message: "Google account email must be verified." });
+    }
+
+    const email = payload.email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
+      return res.status(400).json({ message: "Google returned an invalid email address." });
+    }
+
+    let user = await User.findOne({ googleId: payload.sub });
+    if (!user) {
+      user = await User.findOne({ email }).select("+googleId");
+      if (user?.googleId && user.googleId !== payload.sub) {
+        return res.status(409).json({ message: "This email is already linked to another Google account." });
+      }
+      if (!user) {
+        const googleName = (typeof payload.name === "string" ? payload.name.trim() : "").slice(0, 80);
+        user = await User.create({
+          name: googleName.length >= 2 ? googleName : "Google User",
+          email,
+          googleId: payload.sub,
+          role: "passenger",
+        });
+        await writeAudit("USER_REGISTERED_GOOGLE", user._id);
+      } else {
+        // Link only after Google's verified-email claim has been checked above.
+        user.googleId = payload.sub;
+        await user.save();
+      }
+    }
+
+    await writeAudit("LOGIN_SUCCESS_GOOGLE", user._id);
+    return res.json({
+      message: "Google sign-in successful",
+      user: publicUser(user),
+      token: createToken(user),
+    });
+  } catch (error) {
+    console.error("Google authentication error:", error.message);
+    return res.status(401).json({ message: "Google sign-in could not be verified. Please try again." });
   }
 }
 

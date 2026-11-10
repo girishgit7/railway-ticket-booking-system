@@ -432,17 +432,22 @@ Further verification is required for overbooking prevention, seat restoration af
 
 Sprint 2 extends the Railway Reservation System with train administration, passenger authentication, ticket booking, cancellation and refund calculations, and reservation tracking. The project demonstrates C++ programming, file handling, and software testing.
 
-## Sprint 3 audit and verification
 
-See [SPRINT3_AUDIT_AND_TEST_REPORT.md](./SPRINT3_AUDIT_AND_TEST_REPORT.md) for the
-latest audit, changes, verification results, and remaining architectural limitations.
+## Expanded demo train catalogue and advance-date support
 
-Run the backend test suite with:
+- The local C++ catalogue now contains 127 illustrative train services across 45 city/station labels.
+- On the first engine search/start after updating, `loadTrains()` automatically merges these seed entries into the existing `trains.txt` by train number, preserving any additional locally added train records.
+- Train names/numbers and route pairs are inspired by well-known Indian Railways services. The local timetable times, fares, and seat capacities are sample/demo values, not an official railway timetable or live inventory.
+- The C++ engine, Express validation, and React date picker support journeys up to 240 days ahead. This makes dates throughout June 2027 selectable from November 2026.
+- This 240-day range is an academic-project simulation. Indian Railways' normal Advance Reservation Period is 60 days (excluding the journey date); do not treat a local C++ booking as an IRCTC reservation. Foreign Tourist Quota has separate rules.
+- RailRadar remains a separate external read-only integration for live train timetable, running status, and seat-availability enquiries. It requires `RAILRADAR_API_KEY` in `server/.env`. Live provider data is not automatically converted into confirmed C++ inventory.
+- After updating, rebuild the native engine with `cd server` then `npm run build:engine`.
 
-```powershell
-cd .\server
-npm test
-```
 
-The C++ integration test compiles the engine into a temporary directory and uses
-isolated temporary data files. It does not modify the project's live booking data.
+## Google sign-in configuration
+
+1. Create a Google OAuth Web application client ID in Google Cloud Console.
+2. Copy `client/.env.example` to `client/.env` and set `VITE_GOOGLE_CLIENT_ID`.
+3. Copy `server/.env.example` to `server/.env` and set the same `GOOGLE_CLIENT_ID`, plus your existing `MONGODB_URI` and strong `JWT_SECRET`.
+4. Add `http://localhost:5173` to the OAuth authorised JavaScript origins for local development.
+5. Restart both development servers after changing environment files. Never put the Google client secret or JWT secret in a `VITE_` variable.
