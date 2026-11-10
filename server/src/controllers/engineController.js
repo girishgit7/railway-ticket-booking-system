@@ -52,6 +52,19 @@ export async function getCppPnr(req, res, next) {
     const result = await runCpp(["pnr", req.user.email, pnr]); return res.json({ booking: toUiBooking(result), engine: "cpp" });
   } catch (error) { next(error); }
 }
+export async function getCppTicket(req, res, next) {
+  try {
+    const pnr = String(req.params.pnr || "");
+    if (!/^\d{10}$/.test(pnr)) {
+      return res.status(400).json({ message: "Invalid 10-digit PNR." });
+    }
+    const booking = await runCpp(["pnr", req.user.email, pnr]);
+    return res.json({ ticket: toUiBooking(booking), engine: "cpp" });
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function cancelCppBooking(req, res, next) {
   try {
     const pnr = String(req.params.pnr || "");

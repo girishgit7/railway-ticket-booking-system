@@ -2,7 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 import {
   Alert, AppBar, Box, Button, Card, CardContent, Chip, CircularProgress,
-  Container, Dialog, DialogActions, DialogContent, DialogTitle, Grid,
+  Container, Dialog, DialogActions, DialogContent, DialogTitle, Divider, Grid,
   MenuItem, Paper, Stack, Tab, Tabs, TextField, Toolbar, Typography,
 } from "@mui/material";
 import TrainIcon from "@mui/icons-material/Train";
@@ -39,6 +39,9 @@ export default function App() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [pnr, setPnr] = useState("");
   const [pnrResult, setPnrResult] = useState<Booking | null>(null);
+  const [ticketBooking, setTicketBooking] = useState<Booking | null>(null);
+  const [ticketOpen, setTicketOpen] = useState(false);
+  const [ticketLoading, setTicketLoading] = useState(false);
   const [selected, setSelected] = useState<Journey | null>(null);
   const [travelClass, setTravelClass] = useState("SLEEPER");
   const [passengers, setPassengers] = useState<Passenger[]>([emptyPassenger()]);
@@ -105,6 +108,20 @@ export default function App() {
     catch (e) { setError(apiError(e, "Unable to find this booking.")); }
     finally { setBusy(false); }
   };
+  const openTicket = async (booking: Booking) => {
+    setTicketLoading(true);
+    setError("");
+    try {
+      const r = await api.get(`/engine/bookings/${encodeURIComponent(booking.pnr)}/ticket`);
+      setTicketBooking(r.data.ticket);
+      setTicketOpen(true);
+    } catch (e) {
+      setError(apiError(e, "Unable to retrieve this ticket. Please refresh your bookings and try again."));
+    } finally {
+      setTicketLoading(false);
+    }
+  };
+
   const cancelBooking = async (booking: Booking) => {
     if (!window.confirm(`Cancel booking ${booking.pnr}? A 90% simulated refund will be recorded.`)) return;
     setBusy(true); setError(""); setNotice("");
@@ -135,7 +152,7 @@ export default function App() {
     finally { setBusy(false); }
   };
 
-  const renderBooking = (b: Booking) => <Card key={b._id} variant="outlined"><CardContent><Stack direction={{ xs: "column", sm: "row" }} style={{ justifyContent: "space-between" }} spacing={2}><Box><Typography variant="h6" style={{ fontWeight: 800 }}>PNR {b.pnr}</Typography><Typography>{b.schedule?.train?.name ?? "Train details"} · {b.travelClass}</Typography><Typography variant="body2" color="text.secondary">{b.schedule?.train?.source ?? ""} → {b.schedule?.train?.destination ?? ""} · {b.schedule?.journeyDate ? new Date(b.schedule.journeyDate).toLocaleDateString() : ""}</Typography><Typography variant="body2">{b.passengers?.length ?? 0} passenger(s) · ₹{b.fare}</Typography></Box><Stack style={{ alignItems: "flex-end" }} spacing={1}><Chip label={`${b.status} / ${b.paymentStatus}`} color={b.status === "confirmed" ? "success" : "default"} /><Button variant="outlined" onClick={() => { setPnr(b.pnr); setPnrResult(b); setTab(2); }}>View ticket</Button>{b.status === "confirmed" && <Button color="error" onClick={() => void cancelBooking(b)} disabled={busy}>Cancel booking</Button>}{b.refundAmount ? <Typography variant="body2">Refund: ₹{b.refundAmount}</Typography> : null}</Stack></Stack></CardContent></Card>;
+  const renderBooking = (b: Booking) => <Card key={b._id} variant="outlined"><CardContent><Stack direction={{ xs: "column", sm: "row" }} style={{ justifyContent: "space-between" }} spacing={2}><Box><Typography variant="h6" style={{ fontWeight: 800 }}>PNR {b.pnr}</Typography><Typography>{b.schedule?.train?.name ?? "Train details"} · {b.travelClass}</Typography><Typography variant="body2" color="text.secondary">{b.schedule?.train?.source ?? ""} → {b.schedule?.train?.destination ?? ""} · {b.schedule?.journeyDate ? new Date(b.schedule.journeyDate).toLocaleDateString() : ""}</Typography><Typography variant="body2">{b.passengers?.length ?? 0} passenger(s) · ₹{b.fare}</Typography></Box><Stack style={{ alignItems: "flex-end" }} spacing={1}><Chip label={`${b.status} / ${b.paymentStatus}`} color={b.status === "confirmed" ? "success" : "default"} /><Button variant="outlined" onClick={() => void openTicket(b)} disabled={ticketLoading}>{ticketLoading ? "Loading…" : "View ticket"}</Button>{b.status === "confirmed" && <Button color="error" onClick={() => void cancelBooking(b)} disabled={busy}>Cancel booking</Button>}{b.refundAmount ? <Typography variant="body2">Refund: ₹{b.refundAmount}</Typography> : null}</Stack></Stack></CardContent></Card>;
 
   return <Box sx={{ minHeight: "100vh", bgcolor: "#f4f6fb" }}>
     <AppBar position="static" sx={{ bgcolor: "#102b4e" }} elevation={0}><Toolbar sx={{ maxWidth: 1200, width: "100%", mx: "auto" }}><TrainIcon sx={{ mr: 1 }} /><Typography variant="h6" style={{ fontWeight: 800 }} sx={{ flexGrow: 1 }}>RailConnect</Typography>{user ? <Stack direction="row" spacing={1} style={{ alignItems: "center" }}><Typography variant="body2">Hi, {user.name}</Typography>{user.role === "admin" && <Chip size="small" label="ADMIN" color="secondary" /> }<Button color="inherit" onClick={logout}>Logout</Button></Stack> : <Button color="inherit" startIcon={<LoginIcon />} onClick={() => { setError(""); setAuthOpen(true); }}>Login / Register</Button>}</Toolbar></AppBar>
@@ -154,6 +171,52 @@ export default function App() {
     </Container>
 
     <Dialog open={authOpen} onClose={() => setAuthOpen(false)} fullWidth maxWidth="xs"><DialogTitle style={{ fontWeight: 800 }}>Welcome to RailConnect</DialogTitle><DialogContent><Tabs value={authTab} onChange={(_, v) => { setAuthTab(v); setError(""); }} variant="fullWidth"><Tab label="Login" /><Tab label="Register" /></Tabs><Stack spacing={2} sx={{ mt: 3 }}>{authTab === 1 && <TextField label="Full name" value={authName} onChange={(e) => setAuthName(e.target.value)} /> }<TextField label="Email" type="email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} /><TextField label="Password" type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} helperText={authTab === 1 ? "Use 10–72 characters." : ""} />{error && <Alert severity="error">{error}</Alert>}</Stack></DialogContent><DialogActions sx={{ p: 2 }}><Button onClick={() => setAuthOpen(false)}>Close</Button><Button variant="contained" onClick={() => void authenticate()} disabled={busy}>{authTab === 0 ? "Login" : "Create account"}</Button></DialogActions></Dialog>
+
+    <Dialog open={ticketOpen} onClose={() => setTicketOpen(false)} fullWidth maxWidth="sm">
+      <DialogTitle sx={{ fontWeight: 900, pb: 1 }}>RailConnect · Journey ticket</DialogTitle>
+      <DialogContent>
+        {ticketBooking && <Stack spacing={2} sx={{ pt: 1 }}>
+          <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, borderStyle: "dashed" }}>
+            <Stack direction="row" style={{ justifyContent: "space-between", alignItems: "center" }} spacing={2}>
+              <Box>
+                <Typography variant="overline" color="text.secondary">BOOKING REFERENCE / PNR</Typography>
+                <Typography variant="h4" sx={{ fontWeight: 900, letterSpacing: 1 }}>{ticketBooking.pnr}</Typography>
+              </Box>
+              <Chip label={ticketBooking.status?.toUpperCase() ?? "UNKNOWN"} color={ticketBooking.status === "confirmed" ? "success" : "default"} />
+            </Stack>
+          </Paper>
+          <Box>
+            <Typography variant="overline" color="text.secondary">TRAIN</Typography>
+            <Typography variant="h6" sx={{ fontWeight: 800 }}>{ticketBooking.schedule?.train?.name ?? "Train details unavailable"}</Typography>
+            <Typography color="text.secondary">Train no. {ticketBooking.schedule?.train?.trainNumber ?? "—"}</Typography>
+          </Box>
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 6 }}><Typography variant="caption" color="text.secondary">FROM</Typography><Typography sx={{ fontWeight: 700 }}>{ticketBooking.schedule?.train?.source ?? "—"}</Typography></Grid>
+            <Grid size={{ xs: 6 }}><Typography variant="caption" color="text.secondary">TO</Typography><Typography sx={{ fontWeight: 700 }}>{ticketBooking.schedule?.train?.destination ?? "—"}</Typography></Grid>
+            <Grid size={{ xs: 6 }}><Typography variant="caption" color="text.secondary">JOURNEY DATE</Typography><Typography sx={{ fontWeight: 700 }}>{ticketBooking.schedule?.journeyDate ? new Date(ticketBooking.schedule.journeyDate).toLocaleDateString() : "—"}</Typography></Grid>
+            <Grid size={{ xs: 6 }}><Typography variant="caption" color="text.secondary">CLASS</Typography><Typography sx={{ fontWeight: 700 }}>{ticketBooking.travelClass}</Typography></Grid>
+            <Grid size={{ xs: 6 }}><Typography variant="caption" color="text.secondary">DEPARTURE</Typography><Typography sx={{ fontWeight: 700 }}>{ticketBooking.schedule?.departureTime ?? "—"}</Typography></Grid>
+            <Grid size={{ xs: 6 }}><Typography variant="caption" color="text.secondary">ARRIVAL</Typography><Typography sx={{ fontWeight: 700 }}>{ticketBooking.schedule?.arrivalTime ?? "—"}</Typography></Grid>
+          </Grid>
+          <Divider />
+          <Box>
+            <Typography sx={{ fontWeight: 800, mb: 1 }}>Passenger details</Typography>
+            <Stack spacing={1}>{(ticketBooking.passengers ?? []).map((p, i) => <Paper key={`${p.name}-${i}`} variant="outlined" sx={{ p: 1.5 }}>
+              <Typography sx={{ fontWeight: 700 }}>{i + 1}. {p.name}</Typography>
+              <Typography variant="body2" color="text.secondary">Age: {p.age ?? "—"} · Gender: {p.gender ?? "—"} · Berth: {p.berthPreference ?? "No preference"}</Typography>
+            </Paper>)}</Stack>
+          </Box>
+          <Divider />
+          <Stack direction="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
+            <Box><Typography variant="caption" color="text.secondary">PAYMENT STATUS</Typography><Typography sx={{ fontWeight: 700 }}>{ticketBooking.paymentStatus?.toUpperCase() ?? "—"}</Typography></Box>
+            <Box sx={{ textAlign: "right" }}><Typography variant="caption" color="text.secondary">TOTAL FARE</Typography><Typography variant="h5" sx={{ fontWeight: 900 }}>₹{Number(ticketBooking.fare ?? 0).toLocaleString("en-IN")}</Typography></Box>
+          </Stack>
+          {ticketBooking.refundAmount ? <Alert severity="info">Recorded simulated refund: ₹{ticketBooking.refundAmount.toLocaleString("en-IN")}</Alert> : null}
+          <Alert severity="info">This is a RailConnect project booking receipt generated from the C++ booking engine. It is not an IRCTC-issued ticket.</Alert>
+        </Stack>}
+      </DialogContent>
+      <DialogActions sx={{ p: 2 }}><Button onClick={() => setTicketOpen(false)}>Close</Button></DialogActions>
+    </Dialog>
 
     <Dialog open={Boolean(selected)} onClose={() => setSelected(null)} fullWidth maxWidth="md"><DialogTitle style={{ fontWeight: 800 }}>Complete your booking</DialogTitle><DialogContent><Stack spacing={2} sx={{ mt: 1 }}><Typography>{selected?.train.name} · {selected?.train.source} → {selected?.train.destination}</Typography><TextField select label="Travel class" value={travelClass} onChange={(e) => setTravelClass(e.target.value)}>{classes.filter((c) => Number(selected?.availability?.[c] ?? 0) > 0).map((c) => <MenuItem key={c} value={c}>{c} · ₹{selected?.fares?.[c]} per passenger · {selected?.availability?.[c]} seats</MenuItem>)}</TextField>{passengers.map((p, i) => <Paper key={i} variant="outlined" sx={{ p: 2 }}><Stack spacing={1}><Typography style={{ fontWeight: 700 }}>Passenger {i + 1}</Typography><Grid container spacing={1}><Grid size={{ xs: 12, sm: 5 }}><TextField fullWidth label="Full name" value={p.name} onChange={(e) => setPassengers((a) => a.map((x, n) => n === i ? { ...x, name: e.target.value } : x))} /></Grid><Grid size={{ xs: 6, sm: 2 }}><TextField fullWidth type="number" label="Age" value={p.age} onChange={(e) => setPassengers((a) => a.map((x, n) => n === i ? { ...x, age: Number(e.target.value) } : x))} /></Grid><Grid size={{ xs: 6, sm: 2 }}><TextField fullWidth select label="Gender" value={p.gender} onChange={(e) => setPassengers((a) => a.map((x, n) => n === i ? { ...x, gender: e.target.value } : x))}><MenuItem value="unspecified">Unspecified</MenuItem><MenuItem value="male">Male</MenuItem><MenuItem value="female">Female</MenuItem><MenuItem value="other">Other</MenuItem></TextField></Grid><Grid size={{ xs: 12, sm: 3 }}><TextField fullWidth select label="Berth" value={p.berthPreference} onChange={(e) => setPassengers((a) => a.map((x, n) => n === i ? { ...x, berthPreference: e.target.value } : x))}>{["no-preference", "lower", "middle", "upper", "side-lower", "side-upper"].map((v) => <MenuItem key={v} value={v}>{v}</MenuItem>)}</TextField></Grid></Grid>{passengers.length > 1 && <Button color="error" onClick={() => setPassengers((a) => a.filter((_, n) => n !== i))}>Remove passenger</Button>}</Stack></Paper>)}<Button disabled={passengers.length >= 6} onClick={() => setPassengers((a) => [...a, emptyPassenger()])}>+ Add passenger (max 6)</Button><TextField select label="Payment mode (simulated)" value={paymentMode} onChange={(e) => setPaymentMode(e.target.value)}>{["UPI", "CARD_SIMULATED", "NET_BANKING", "CASH"].map((v) => <MenuItem key={v} value={v}>{v}</MenuItem>)}</TextField><Typography style={{ fontWeight: 800 }}>Total: ₹{Number(selected?.fares?.[travelClass] ?? 0) * passengers.length}</Typography><Alert severity="info">This is a simulated payment for academic demonstration. No real money is charged.</Alert></Stack></DialogContent><DialogActions sx={{ p: 2 }}><Button onClick={() => setSelected(null)}>Cancel</Button><Button variant="contained" onClick={() => void bookSelected()} disabled={busy || !selected || Number(selected.availability?.[travelClass] ?? 0) < passengers.length}>Confirm booking</Button></DialogActions></Dialog>
     <Box sx={{ bgcolor: "#102b4e", color: "white", py: 3, textAlign: "center" }}><Typography variant="body2">© {new Date().getFullYear()} RailConnect · Railway Reservation System</Typography></Box>
