@@ -25,3 +25,16 @@ The suite exercised valid and invalid menu/input paths, duplicate registration, 
 ## Uncovered or not safely executable
 
 The percentage does not mean all semantic paths were validated. Remaining paths include filesystem open/write/rename failures, malformed persisted records, multi-process concurrency, Windows-specific password handling, platform-specific terminal behavior, some administrator failure branches, and unit-level module paths. These require additional harnesses or controlled fault injection and are not claimed as tested here.
+
+## Current server test-suite measurement
+
+**Measured:** 2026-11-10
+**Environment:** Node.js v24.11.1
+**Command:** `npm run test:coverage` (from `server/`)
+**Result:** 3 tests passed; 0 failed.
+
+| File | Branch coverage |
+|---|---:|
+| `server/src/services/railRadar.js` | 87.50% |
+
+This is Node's branch coverage for the JavaScript module loaded by the current server tests. It is not a repository-wide percentage: the C++ integration test runs an uninstrumented binary, and the client currently has no test script. The 71.78% / 40.27% GCC figures above belong to the separate Sprint 2 measurement of `railway_sprint2.cpp`.

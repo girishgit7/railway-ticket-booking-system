@@ -32,3 +32,16 @@ This report separates the application source from the many standard-library head
 - Supplemental result: `docs/evidence/sprint2/supplement_assertions.txt`
 
 The 13.80% of application lines not executed and the uncovered branches require additional negative/error, storage-failure, and platform-specific tests. Coverage is a measurement of executed code, not a proof of correctness.
+
+## Current server test-suite measurement
+
+**Measured:** 2026-11-10
+**Environment:** Node.js v24.11.1
+**Command:** `npm run test:coverage` (from `server/`)
+**Result:** 3 tests passed; 0 failed.
+
+| File | Line coverage | Branch coverage | Function coverage | Uncovered lines |
+|---|---:|---:|---:|---|
+| `server/src/services/railRadar.js` | 81.48% | 87.50% | 50.00% | 19-23 |
+
+This is the JavaScript module coverage reported by Node's test runner for modules loaded by the current server tests. It is not whole-repository coverage: the C++ integration test launches a separately compiled, uninstrumented binary, and the client currently has no test script. The Sprint 2 C++ figures above refer to `railway_sprint2.cpp` and its recorded test suite; they are a separate measurement, not coverage of the current server engine.
